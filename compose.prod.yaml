@@ -1,0 +1,63 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:15
+    container_name: ${POSTGRES_CONTAINER_NAME}
+    restart: always
+    env_file:
+      - .env.prod
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+    networks:
+      - blognet
+
+  backend:
+    build: ./services/backend
+    container_name: ${BACKEND_CONTAINER_NAME}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - ./services/backend/app:/app/app:ro
+      - ./blogs:/app/blogs:ro
+    env_file:
+      - .env.prod
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      BACKEND_URL: ${BACKEND_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - ${POSTGRES_CONTAINER_NAME}
+    networks:
+      - blognet
+
+  frontend:
+    build: ./services/frontend
+    container_name: ${FRONTEND_CONTAINER_NAME}
+    command: npm run start
+    volumes:
+      - ./services/frontend:/app:ro
+    env_file:
+      - .env.prod
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      BACKEND_URL: ${BACKEND_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - ${BACKEND_CONTAINER_NAME}
+    networks:
+      - blognet
+
+volumes:
+  pgdata_prod:
+
+networks:
+  blognet:
+    driver: bridge
