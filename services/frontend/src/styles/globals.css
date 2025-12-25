@@ -1,0 +1,17 @@
+body {
+  margin: 0;
+  font-family: 'Inter', 'SF Pro', Arial, sans-serif;
+  background: #f8f9fa;
+  color: #1a1a1a;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Georgia', 'Merriweather', serif;
+}
+
+code, pre {
+  background: #f5f5f5;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: 'Fira Mono', 'Menlo', 'Monaco', monospace;
+}
