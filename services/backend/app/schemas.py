@@ -46,8 +46,11 @@ class CommentBase(BaseModel):
     author_email: Optional[EmailStr]
     content: str
 
-class CommentCreate(CommentBase):
-    pass
+class CommentCreate(BaseModel):
+    # blog_slug comes from URL path, not body
+    author_name: str
+    author_email: Optional[EmailStr] = None
+    content: str
 
 class CommentOut(CommentBase):
     id: str

@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Header, Request
 from app.database import SessionLocal
 from app.models import Comment, Blog
 from app.schemas import CommentCreate, CommentOut
-from app.ratelimit import rate_limiter, get_client_id
+from app.ratelimit import get_client_id
 from app.utils import get_ist_now, ist_to_iso
 from app.auth_helpers import require_admin
 from typing import List
@@ -42,9 +42,20 @@ async def get_comments(slug: str):
 
 
 @router.post("/{slug}/comments")
-@rate_limiter('comment')
 async def create_comment(slug: str, comment: CommentCreate, request: Request):
 	"""Create a new comment (rate limited: 3/hour per IP)"""
+	# Apply rate limiting manually (decorator interferes with FastAPI parameter injection)
+	from app.ratelimit import RATE_LIMITS, rate_limits
+	import time
+	client_id = get_client_id(request)
+	max_calls, period = RATE_LIMITS.get('comment', (3, 3600))
+	now = time.time()
+	calls = rate_limits[(client_id, 'comment')]
+	rate_limits[(client_id, 'comment')] = [t for t in calls if now - t < period]
+	if len(rate_limits[(client_id, 'comment')]) >= max_calls:
+		raise HTTPException(status_code=429, detail='Rate limit exceeded')
+	rate_limits[(client_id, 'comment')].append(now)
+	
 	db = SessionLocal()
 	try:
 		# Verify blog exists

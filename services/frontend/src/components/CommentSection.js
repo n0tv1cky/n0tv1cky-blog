@@ -69,7 +69,7 @@ export default function CommentSection({ blogSlug }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     author_name: authorName.trim(),
-                    author_email: authorEmail.trim() || undefined,
+                    ...(authorEmail.trim() && { author_email: authorEmail.trim() }),
                     content: content.trim()
                 })
             });
