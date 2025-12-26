@@ -4,6 +4,10 @@ import { createBlog, updateBlog, fetchBlog, uploadImage } from '../lib/api';
 import ImageUploader from './ImageUploader';
 import DraftAutosave from './DraftAutosave';
 import { useRouter } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/github.css';
 
 export default function MarkdownEditor({ mode, slug }) {
     const router = useRouter();
@@ -15,6 +19,7 @@ export default function MarkdownEditor({ mode, slug }) {
     const [adminPassword, setAdminPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [viewMode, setViewMode] = useState('edit'); // 'edit', 'preview', 'split'
 
     useEffect(() => {
         if (mode === 'edit' && slug) {
@@ -131,8 +136,114 @@ export default function MarkdownEditor({ mode, slug }) {
             </div>
 
             <div style={{ marginBottom: 8 }}>
-                <label>Content (Markdown)</label>
-                <textarea value={content} onChange={e => setContent(e.target.value)} rows={12} style={{ width: '100%' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <label>Content (Markdown)</label>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('edit')}
+                            style={{
+                                padding: '4px 12px',
+                                fontSize: '14px',
+                                backgroundColor: viewMode === 'edit' ? '#0070f3' : '#f0f0f0',
+                                color: viewMode === 'edit' ? 'white' : 'black',
+                                border: '1px solid #ccc',
+                                borderRadius: '4px 0 0 4px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Edit
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('split')}
+                            style={{
+                                padding: '4px 12px',
+                                fontSize: '14px',
+                                backgroundColor: viewMode === 'split' ? '#0070f3' : '#f0f0f0',
+                                color: viewMode === 'split' ? 'white' : 'black',
+                                border: '1px solid #ccc',
+                                borderLeft: 'none',
+                                borderRight: 'none',
+                                borderRadius: '0',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Split
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('preview')}
+                            style={{
+                                padding: '4px 12px',
+                                fontSize: '14px',
+                                backgroundColor: viewMode === 'preview' ? '#0070f3' : '#f0f0f0',
+                                color: viewMode === 'preview' ? 'white' : 'black',
+                                border: '1px solid #ccc',
+                                borderRadius: '0 4px 4px 0',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Preview
+                        </button>
+                    </div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', minHeight: '400px' }}>
+                    {(viewMode === 'edit' || viewMode === 'split') && (
+                        <div style={{ flex: viewMode === 'split' ? 1 : 'none', width: viewMode === 'split' ? '50%' : '100%' }}>
+                            <textarea
+                                value={content}
+                                onChange={e => setContent(e.target.value)}
+                                rows={viewMode === 'split' ? 20 : 12}
+                                style={{
+                                    width: '100%',
+                                    height: viewMode === 'split' ? '100%' : 'auto',
+                                    fontFamily: 'monospace',
+                                    fontSize: '14px',
+                                    padding: '8px',
+                                    border: '1px solid #ccc',
+                                    borderRadius: '4px',
+                                    resize: 'none'
+                                }}
+                            />
+                        </div>
+                    )}
+                    {(viewMode === 'preview' || viewMode === 'split') && (
+                        <div style={{
+                            flex: viewMode === 'split' ? 1 : 'none',
+                            width: viewMode === 'split' ? '50%' : '100%',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            padding: '12px',
+                            minHeight: viewMode === 'split' ? '100%' : '300px',
+                            backgroundColor: '#fff',
+                            overflow: 'auto'
+                        }}>
+                            <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                rehypePlugins={[rehypeHighlight]}
+                                components={{
+                                    img: ({ node, ...props }) => {
+                                        // Fix image URLs to point to backend
+                                        let src = props.src || '';
+                                        if (src && src.startsWith('/images/')) {
+                                            const backendUrl = typeof window !== 'undefined'
+                                                ? (window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000')
+                                                : 'http://localhost:8000';
+                                            const baseUrl = backendUrl.includes('_') || (!backendUrl.includes('.') && !backendUrl.startsWith('http://localhost') && !backendUrl.startsWith('https://'))
+                                                ? `http://localhost:${backendUrl.match(/:(\d+)/)?.[1] || '8000'}`
+                                                : backendUrl;
+                                            src = `${baseUrl}${src}`;
+                                        }
+                                        return <img {...props} src={src} style={{ maxWidth: '100%' }} />;
+                                    }
+                                }}
+                            >
+                                {content || '*No content yet*'}
+                            </ReactMarkdown>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div style={{ marginBottom: 8 }}>

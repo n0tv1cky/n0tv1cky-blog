@@ -126,9 +126,29 @@ export default function BlogViewer({ slug }) {
                                 const id = typeof text === 'string' ? text.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
                                 return <h3 id={id} {...props} />;
                             },
-                            img: ({ node, ...props }) => (
-                                <img {...props} style={{ maxWidth: '100%', cursor: 'pointer' }} />
-                            )
+                            img: ({ node, ...props }) => {
+                                // Fix image URLs to point to backend
+                                let src = props.src || '';
+                                if (src && src.startsWith('/images/')) {
+                                    // Get backend URL from env
+                                    const backendUrl = typeof window !== 'undefined'
+                                        ? (window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000')
+                                        : 'http://localhost:8000';
+                                    // Convert Docker service name to localhost if needed
+                                    const baseUrl = backendUrl.includes('_') || (!backendUrl.includes('.') && !backendUrl.startsWith('http://localhost') && !backendUrl.startsWith('https://'))
+                                        ? `http://localhost:${backendUrl.match(/:(\d+)/)?.[1] || '8000'}`
+                                        : backendUrl;
+                                    src = `${baseUrl}${src}`;
+                                }
+                                return (
+                                    <img
+                                        {...props}
+                                        src={src}
+                                        style={{ maxWidth: '100%', cursor: 'pointer' }}
+                                        onClick={() => setSelectedImage(src)}
+                                    />
+                                );
+                            }
                         }}
                     >
                         {blog.content}
