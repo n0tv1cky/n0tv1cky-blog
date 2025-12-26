@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchBlogs } from '../lib/api';
+import { fetchAllBlogs } from '../lib/api';
 import toast from 'react-hot-toast';
 
 export default function AdminDashboard() {
@@ -19,7 +19,7 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         let isMounted = true;
-        fetchBlogs().then((data) => {
+        fetchAllBlogs().then((data) => {
             if (isMounted) setBlogs(data || []);
             setLoading(false);
         }).catch(() => setLoading(false));

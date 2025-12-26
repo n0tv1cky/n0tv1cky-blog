@@ -9,6 +9,7 @@ import logging
 from app.blog_sync import sync_blogs_from_filesystem
 from app.utils import get_ist_now, ist_to_iso
 from app.ratelimit import rate_limiter
+from app.routes.blogs import read_all_blogs
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -248,6 +249,14 @@ async def toggle_publish(slug: str, x_admin_password: str = Header(None), author
 		db.close()
 	
 	return {'ok': True, 'published': new_published}
+
+
+@router.get('/blogs')
+async def list_all_blogs(x_admin_password: str = Header(None), authorization: str = Header(None)):
+	"""List all blogs (published and drafts) - admin only"""
+	require_admin(x_admin_password, authorization)
+	# Return all blogs, not just published ones
+	return read_all_blogs(published_only=False)
 
 
 @router.get('/drafts')

@@ -4,6 +4,7 @@ import glob
 import os
 from app.markdown_parser import parse_markdown_file
 import logging
+from datetime import datetime
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -36,9 +37,25 @@ def read_all_blogs(published_only: bool = True):
 			continue
 	
 	# Sort by published_at or created_at descending, fallback to filename
-	result.sort(key=lambda x: (
-		x.get('published_at') or x.get('created_at') or x.get('filename', '')
-	), reverse=True)
+	# Normalize dates to strings for consistent sorting
+	def get_sort_key(item):
+		published_at = item.get('published_at')
+		created_at = item.get('created_at')
+		filename = item.get('filename', '')
+		
+		# Convert datetime objects to ISO strings for sorting
+		if published_at:
+			if isinstance(published_at, datetime):
+				return published_at.isoformat()
+			return str(published_at)
+		if created_at:
+			if isinstance(created_at, datetime):
+				return created_at.isoformat()
+			return str(created_at)
+		# Fallback to filename (string)
+		return filename
+	
+	result.sort(key=get_sort_key, reverse=True)
 	return result
 
 

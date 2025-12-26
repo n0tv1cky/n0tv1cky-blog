@@ -52,6 +52,22 @@ export async function fetchBlogs() {
     return [];
 }
 
+export async function fetchAllBlogs() {
+    // Admin endpoint - returns all blogs (published and drafts)
+    const url = BASE ? `${BASE}/api/admin/blogs` : `/api/admin/blogs`;
+    try {
+        const res = await authFetch(url, {
+            method: 'GET'
+        });
+        if (!res.ok) {
+            return [];
+        }
+        return await res.json();
+    } catch (e) {
+        return [];
+    }
+}
+
 export async function fetchBlog(slug) {
     const url = BASE ? `${BASE}/api/blogs/${slug}` : `/api/blogs/${slug}`;
     const data = await safeFetch(url);
