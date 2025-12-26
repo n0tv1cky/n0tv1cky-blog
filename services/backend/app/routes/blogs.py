@@ -31,6 +31,13 @@ def read_all_blogs(published_only: bool = True):
 			front.setdefault('filename', filename)
 			# Only include content for individual blog requests, not list
 			# front.setdefault('content', content)  # Removed for list endpoint
+			
+			# Convert datetime objects to ISO strings for JSON serialization
+			# YAML parser may return datetime objects which aren't JSON serializable
+			for key in ['published_at', 'created_at', 'updated_at']:
+				if key in front and isinstance(front[key], datetime):
+					front[key] = front[key].isoformat()
+			
 			result.append(front)
 		except Exception as e:
 			logger.warning(f"Failed to parse blog file {f}: {e}")
@@ -80,4 +87,10 @@ async def get_blog(slug: str):
 	front, content = parse_markdown_file(files[0])
 	front = front or {}
 	front['content'] = content
+	
+	# Convert datetime objects to ISO strings for JSON serialization
+	for key in ['published_at', 'created_at', 'updated_at']:
+		if key in front and isinstance(front[key], datetime):
+			front[key] = front[key].isoformat()
+	
 	return front
