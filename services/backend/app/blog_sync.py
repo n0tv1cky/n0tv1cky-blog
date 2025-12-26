@@ -41,14 +41,25 @@ def upsert_blog_metadata(frontmatter: dict, content: str, file_path: str, db: Se
     if 'reading_time' not in frontmatter or not frontmatter.get('reading_time'):
         frontmatter['reading_time'] = calculate_reading_time(content)
     
+    # Only include fields that exist in the Blog model
+    # Valid Blog model fields: id, slug, title, filename, description, published, published_at, 
+    # created_at, updated_at, reading_time, tags, category
+    valid_fields = {
+        'slug', 'title', 'filename', 'description', 'published', 'published_at',
+        'created_at', 'updated_at', 'reading_time', 'tags', 'category'
+    }
+    
+    # Filter frontmatter to only include valid fields
+    filtered_frontmatter = {k: v for k, v in frontmatter.items() if k in valid_fields}
+    filtered_frontmatter['filename'] = os.path.basename(file_path)
+    
     blog = db.query(Blog).filter_by(slug=slug).first()
     if blog:
-        for key, value in frontmatter.items():
+        for key, value in filtered_frontmatter.items():
             if key != 'id':  # Don't overwrite ID
                 setattr(blog, key, value)
-        blog.filename = os.path.basename(file_path)
     else:
-        blog = Blog(**frontmatter, filename=os.path.basename(file_path))
+        blog = Blog(**filtered_frontmatter)
         db.add(blog)
     db.commit()
 
