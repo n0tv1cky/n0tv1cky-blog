@@ -48,7 +48,7 @@ export default function AdminDashboard() {
                 <ul>
                     {blogs.map(b => (
                         <li key={b.slug} style={{ marginBottom: '0.75rem' }}>
-                            <Link href={`/admin/edit/${b.slug}`}><a>{b.title} — {b.published ? 'Published' : 'Draft'}</a></Link>
+                            <Link href={`/admin/edit/${b.slug}`}>{b.title} — {b.published ? 'Published' : 'Draft'}</Link>
                         </li>
                     ))}
                 </ul>
