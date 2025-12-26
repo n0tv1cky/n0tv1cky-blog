@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
-import toast from 'react-hot-toast';
 
-export default function DraftAutosave({ enabled = true, title, slug, description, content, onSave }) {
+export default function DraftAutosave({ enabled = true, title, slug, description, content, onSave, showUI = true }) {
     const [status, setStatus] = useState('');
     const [isEnabled, setIsEnabled] = useState(enabled);
     const saveIntervalRef = useRef(null);
@@ -35,7 +34,7 @@ export default function DraftAutosave({ enabled = true, title, slug, description
 
                 setStatus('Saved');
                 lastSavedRef.current = new Date();
-                toast.success('Draft saved', { duration: 2000 });
+                // Toast removed - using visual indicator in MarkdownEditor instead
                 setTimeout(() => setStatus(''), 2000);
             }
         }, 30000); // 30 seconds
@@ -46,6 +45,11 @@ export default function DraftAutosave({ enabled = true, title, slug, description
             }
         };
     }, [isEnabled, title, slug, description, content, onSave]);
+
+    // If showUI is false, don't render anything (used when autosave is controlled by parent)
+    if (!showUI) {
+        return null;
+    }
 
     return (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>

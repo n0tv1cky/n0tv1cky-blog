@@ -23,6 +23,10 @@ export default function MarkdownEditor({ mode, slug }) {
     const [viewMode, setViewMode] = useState('edit'); // 'edit', 'preview', 'split'
     const [splitPosition, setSplitPosition] = useState(50); // Percentage for split view
     const [isDragging, setIsDragging] = useState(false);
+    const [saveStatus, setSaveStatus] = useState('idle'); // 'idle', 'saving', 'saved'
+    const [autosaveEnabled, setAutosaveEnabled] = useState(true);
+    const [showAutosaveMenu, setShowAutosaveMenu] = useState(false);
+    const [lastSavedTime, setLastSavedTime] = useState(null);
 
     useEffect(() => {
         if (mode === 'edit' && slug) {
@@ -112,30 +116,36 @@ export default function MarkdownEditor({ mode, slug }) {
         };
     }, [isDragging]);
 
-    async function handleSave() {
+    async function handleSave(publish = false) {
         setLoading(true);
+        setSaveStatus('saving');
         setError(null);
-        const payload = { title, slug: blogSlug, description, content, published };
+        const payload = { title, slug: blogSlug, description, content, published: publish };
         try {
             if (mode === 'new') {
                 await createBlog(payload, adminPassword);
-                if (published) {
+                if (publish) {
                     toast.success('Blog published successfully!');
                 } else {
                     toast.success('Blog saved as draft!');
                 }
             } else {
                 await updateBlog(slug, payload, adminPassword);
-                if (published) {
+                if (publish) {
                     toast.success('Blog published successfully!');
                 } else {
                     toast.success('Blog updated successfully!');
                 }
             }
-            router.push('/admin');
+            setSaveStatus('saved');
+            setLastSavedTime(new Date());
+            setTimeout(() => {
+                router.push('/admin');
+            }, 1000);
         } catch (e) {
             const errorMsg = e.message || 'Save failed';
             setError(errorMsg);
+            setSaveStatus('idle');
             toast.error(errorMsg);
         } finally {
             setLoading(false);
@@ -152,9 +162,47 @@ export default function MarkdownEditor({ mode, slug }) {
                     <p className="text-gray-600">Create or edit your blog post</p>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 space-y-6">
-                    {/* Basic Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Save Status Indicator at Top */}
+                <div className="flex items-center gap-2 pb-4 border-b border-gray-200 mb-6">
+                    {saveStatus === 'saving' && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                            <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span className="text-sm">Saving...</span>
+                        </div>
+                    )}
+                    {saveStatus === 'saved' && (
+                        <div className="flex items-center gap-2 text-green-600">
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <span className="text-sm">Saved</span>
+                        </div>
+                    )}
+                    {saveStatus === 'idle' && (
+                        <div 
+                            className="flex items-center gap-2 text-gray-400 group relative cursor-pointer"
+                            title={lastSavedTime ? `Last saved: ${lastSavedTime.toLocaleString()}` : 'Not saved yet'}
+                        >
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            {lastSavedTime && (
+                                <span className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                    {lastSavedTime.toLocaleString()}
+                                </span>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Basic Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Title <span className="text-red-500">*</span>
@@ -165,7 +213,7 @@ export default function MarkdownEditor({ mode, slug }) {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
                                 placeholder="Enter blog title"
                             />
-                        </div>
+            </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -178,7 +226,7 @@ export default function MarkdownEditor({ mode, slug }) {
                                 placeholder="blog-slug"
                             />
                         </div>
-                    </div>
+            </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -190,10 +238,10 @@ export default function MarkdownEditor({ mode, slug }) {
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
                             placeholder="Brief description of the blog"
                         />
-                    </div>
+            </div>
 
                     <DraftAutosave
-                        enabled={true}
+                        enabled={autosaveEnabled}
                         title={title}
                         slug={blogSlug}
                         description={description}
@@ -204,11 +252,16 @@ export default function MarkdownEditor({ mode, slug }) {
                                 const key = mode === 'new' ? 'draft_new' : `draft_${slug}`;
                                 localStorage.setItem(key, JSON.stringify(draft));
                             }
+                            // Update save status to show saved indicator
+                            setSaveStatus('saved');
+                            setLastSavedTime(new Date());
+                            setTimeout(() => setSaveStatus('idle'), 2000);
                         }}
+                        showUI={false}
                     />
 
-                    {/* Markdown Editor */}
-                    <div>
+                {/* Markdown Editor */}
+                <div className="mb-6">
                         <div className="flex justify-between items-center mb-3">
                             <label className="block text-sm font-medium text-gray-700">
                                 Content (Markdown)
@@ -310,73 +363,98 @@ export default function MarkdownEditor({ mode, slug }) {
                                 </div>
                             )}
                         </div>
+                </div>
+
+                {/* Admin Password */}
+                <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Admin Password <span className="text-red-500">*</span>
+                    </label>
+                    <input 
+                        value={adminPassword} 
+                        onChange={e => setAdminPassword(e.target.value)}
+                        type="password"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                        placeholder="Enter admin password"
+                    />
+                </div>
+
+                {/* Image Upload */}
+                <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Upload Image
+                    </label>
+                    <ImageUploader 
+                        adminPassword={adminPassword} 
+                        blogSlug={blogSlug} 
+                        onUpload={(url) => setContent(c => c + `\n\n![Image](${url})\n`)} 
+                    />
+                </div>
+
+                {error && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm mb-6">
+                        {error}
                     </div>
+                )}
 
-                    {/* Options */}
-                    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input 
-                                type="checkbox" 
-                                checked={published} 
-                                onChange={e => setPublished(e.target.checked)}
-                                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                            />
-                            <span className="text-sm font-medium text-gray-700">Published</span>
-                        </label>
-                    </div>
-
-                    {/* Admin Password */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Admin Password <span className="text-red-500">*</span>
-                        </label>
-                        <input 
-                            value={adminPassword} 
-                            onChange={e => setAdminPassword(e.target.value)}
-                            type="password"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
-                            placeholder="Enter admin password"
-                        />
-                    </div>
-
-                    {/* Image Upload */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Upload Image
-                        </label>
-                        <ImageUploader 
-                            adminPassword={adminPassword} 
-                            blogSlug={blogSlug} 
-                            onUpload={(url) => setContent(c => c + `\n\n![Image](${url})\n`)} 
-                        />
-                    </div>
-
-                    {error && (
-                        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                            {error}
-                        </div>
-                    )}
-
-                    {/* Save Button */}
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                        <button 
-                            onClick={() => router.push('/admin')}
-                            className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                {/* Action Buttons */}
+                <div className="flex justify-end items-center gap-3 pt-4 border-t border-gray-200">
+                    {/* Settings Menu (Cog Wheel) */}
+                    <div className="relative settings-menu-container">
+                        <button
+                            type="button"
+                            onClick={() => setShowAutosaveMenu(!showAutosaveMenu)}
+                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                            title="Settings"
                         >
-                            Cancel
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
                         </button>
-                        <button 
-                            onClick={handleSave} 
-                            disabled={loading}
-                            className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${
-                                loading
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-primary-600 hover:bg-primary-700 shadow-sm hover:shadow-md'
-                            } text-white`}
-                        >
-                            {loading ? 'Saving...' : 'Save Blog'}
-                        </button>
+                        {showAutosaveMenu && (
+                            <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                                <label className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={autosaveEnabled}
+                                        onChange={(e) => setAutosaveEnabled(e.target.checked)}
+                                        className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                                    />
+                                    <span className="text-sm text-gray-700">Auto-save drafts (every 30s)</span>
+                                </label>
+                            </div>
+                        )}
                     </div>
+
+                    <button 
+                        onClick={() => router.push('/admin')}
+                        className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        onClick={() => handleSave(false)} 
+                        disabled={loading}
+                        className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${
+                            loading
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-gray-600 hover:bg-gray-700 shadow-sm hover:shadow-md'
+                        } text-white`}
+                    >
+                        {loading && saveStatus === 'saving' ? 'Saving...' : 'Save Draft'}
+                    </button>
+                    <button 
+                        onClick={() => handleSave(true)} 
+                        disabled={loading}
+                        className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${
+                            loading
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-primary-600 hover:bg-primary-700 shadow-sm hover:shadow-md'
+                        } text-white`}
+                    >
+                        {loading && saveStatus === 'saving' ? 'Publishing...' : 'Publish'}
+                    </button>
                 </div>
             </div>
         </main>
