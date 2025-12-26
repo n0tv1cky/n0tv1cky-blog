@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { createBlog, updateBlog, fetchBlog, uploadImage } from '../lib/api';
 import ImageUploader from './ImageUploader';
+import DraftAutosave from './DraftAutosave';
 import { useRouter } from 'next/navigation';
 
 export default function MarkdownEditor({ mode, slug }) {
@@ -29,6 +30,21 @@ export default function MarkdownEditor({ mode, slug }) {
                 }
             });
             return () => { mounted = false };
+        } else if (mode === 'new') {
+            // Try to load draft from localStorage
+            const draftKey = `draft_new`;
+            const saved = localStorage.getItem(draftKey);
+            if (saved) {
+                try {
+                    const draft = JSON.parse(saved);
+                    setTitle(draft.title || '');
+                    setS(draft.slug || '');
+                    setDescription(draft.description || '');
+                    setContent(draft.content || '');
+                } catch (e) {
+                    console.error('Failed to load draft', e);
+                }
+            }
         }
     }, [mode, slug]);
 
@@ -40,8 +56,9 @@ export default function MarkdownEditor({ mode, slug }) {
                 if (item.type.indexOf('image') !== -1) {
                     const file = item.getAsFile();
                     if (file) {
-                        // upload image
-                        uploadImage(file, adminPassword).then(res => {
+                        // upload image with blog_slug
+                        const currentSlug = s || title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                        uploadImage(file, adminPassword, currentSlug).then(res => {
                             if (res && res.url) {
                                 // insert markdown image at end
                                 setContent(c => c + `\n\n![Image](${res.url})\n`);
@@ -90,6 +107,21 @@ export default function MarkdownEditor({ mode, slug }) {
             <div style={{ marginBottom: 8 }}>
                 <label>Description</label>
                 <input value={description} onChange={e => setDescription(e.target.value)} style={{ width: '100%' }} />
+            </div>
+
+            <div style={{ marginBottom: 8 }}>
+                <DraftAutosave 
+                    enabled={true}
+                    title={title}
+                    slug={s}
+                    description={description}
+                    content={content}
+                    onSave={(draft) => {
+                        // Save to localStorage
+                        const key = mode === 'new' ? 'draft_new' : `draft_${slug}`;
+                        localStorage.setItem(key, JSON.stringify(draft));
+                    }}
+                />
             </div>
 
             <div style={{ marginBottom: 8 }}>

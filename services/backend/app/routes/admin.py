@@ -129,3 +129,138 @@ async def update_blog(slug: str, payload: BlogCreate, x_admin_password: str = He
 	sync_blogs_from_filesystem()
 	return {'ok': True, 'filename': filename}
 
+
+@router.post('/sync-blogs')
+async def manual_sync(x_admin_password: str = Header(None), authorization: str = Header(None)):
+	"""Manually sync all .md files to database"""
+	require_admin(x_admin_password, authorization)
+	sync_blogs_from_filesystem()
+	return {'ok': True, 'message': 'Blogs synced successfully'}
+
+
+@router.delete('/blogs/{slug}')
+async def delete_blog(slug: str, x_admin_password: str = Header(None), authorization: str = Header(None)):
+	require_admin(x_admin_password, authorization)
+	import glob
+	import os
+	from app.database import SessionLocal
+	from app.models import Blog
+	
+	# Find file
+	matches = glob.glob(f"./blogs/*_{slug}.md")
+	if not matches:
+		raise HTTPException(status_code=404, detail='Blog file not found')
+	filename = matches[0]
+	
+	# Delete file
+	if os.path.exists(filename):
+		os.remove(filename)
+	
+	# Delete from database
+	db = SessionLocal()
+	try:
+		blog = db.query(Blog).filter_by(slug=slug).first()
+		if blog:
+			db.delete(blog)
+			db.commit()
+	finally:
+		db.close()
+	
+	return {'ok': True, 'message': f'Blog {slug} deleted'}
+
+
+@router.patch('/blogs/{slug}/publish')
+async def toggle_publish(slug: str, x_admin_password: str = Header(None), authorization: str = Header(None)):
+	require_admin(x_admin_password, authorization)
+	import glob
+	from app.database import SessionLocal
+	from app.models import Blog
+	from app.markdown_parser import parse_markdown_file
+	
+	# Find file
+	matches = glob.glob(f"./blogs/*_{slug}.md")
+	if not matches:
+		raise HTTPException(status_code=404, detail='Blog file not found')
+	filename = matches[0]
+	
+	# Read and update frontmatter
+	frontmatter, content = parse_markdown_file(filename)
+	new_published = not frontmatter.get('published', False)
+	frontmatter['published'] = new_published
+	if new_published and not frontmatter.get('published_at'):
+		frontmatter['published_at'] = datetime.datetime.utcnow().isoformat()
+	frontmatter['updated_at'] = datetime.datetime.utcnow().isoformat()
+	
+	# Write back
+	write_markdown_file(filename, frontmatter, content)
+	
+	# Update database
+	db = SessionLocal()
+	try:
+		blog = db.query(Blog).filter_by(slug=slug).first()
+		if blog:
+			blog.published = new_published
+			if new_published:
+				blog.published_at = datetime.datetime.utcnow()
+			blog.updated_at = datetime.datetime.utcnow()
+			db.commit()
+	finally:
+		db.close()
+	
+	return {'ok': True, 'published': new_published}
+
+
+@router.get('/drafts')
+async def list_drafts(x_admin_password: str = Header(None), authorization: str = Header(None)):
+	require_admin(x_admin_password, authorization)
+	import glob
+	import os
+	from app.markdown_parser import parse_markdown_file
+	
+	draft_files = glob.glob("./blogs/drafts/*.md")
+	drafts = []
+	for file_path in draft_files:
+		try:
+			frontmatter, content = parse_markdown_file(file_path)
+			frontmatter['filename'] = os.path.basename(file_path)
+			frontmatter['content'] = content[:200] + '...' if len(content) > 200 else content
+			drafts.append(frontmatter)
+		except Exception:
+			continue
+	return drafts
+
+
+@router.get('/stats')
+async def get_stats(x_admin_password: str = Header(None), authorization: str = Header(None)):
+	require_admin(x_admin_password, authorization)
+	from app.database import SessionLocal
+	from app.models import Blog, Comment, Reaction
+	import glob
+	
+	db = SessionLocal()
+	try:
+		total_blogs = db.query(Blog).count()
+		published_blogs = db.query(Blog).filter_by(published=True).count()
+		draft_blogs = total_blogs - published_blogs
+		total_comments = db.query(Comment).count()
+		total_reactions = db.query(Reaction).count()
+		total_likes = db.query(Reaction).filter_by(reaction_type='like').count()
+		total_dislikes = db.query(Reaction).filter_by(reaction_type='dislike').count()
+		
+		# Count draft files
+		draft_files = glob.glob("./blogs/drafts/*.md")
+		draft_count = len(draft_files)
+		
+		return {
+			'total_blogs': total_blogs,
+			'published_blogs': published_blogs,
+			'draft_blogs': draft_blogs,
+			'draft_files': draft_count,
+			'total_comments': total_comments,
+			'total_reactions': total_reactions,
+			'total_likes': total_likes,
+			'total_dislikes': total_dislikes
+		}
+	finally:
+		db.close()
+

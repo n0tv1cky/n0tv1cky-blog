@@ -78,10 +78,13 @@ export async function updateBlog(slug, payload, adminPassword) {
     }
 }
 
-export async function uploadImage(file, adminPassword) {
+export async function uploadImage(file, adminPassword, blogSlug = null) {
     const url = BASE ? `${BASE}/api/uploads/image` : `/api/uploads/image`;
     const form = new FormData();
     form.append('file', file, file.name);
+    if (blogSlug) {
+        form.append('blog_slug', blogSlug);
+    }
     try {
         // We can't include Content-Type here; rely on authFetch to set headers and refresh tokens if needed
         const res = await authFetch(url, {
