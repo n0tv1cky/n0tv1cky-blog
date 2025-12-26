@@ -65,7 +65,7 @@ export default function BlogViewer({ slug }) {
                 const pre = code.parentElement;
                 if (!pre.querySelector('.copy-code-btn')) {
                     const btn = document.createElement('button');
-                    btn.className = 'copy-code-btn absolute top-2 right-2 px-3 py-1.5 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-700 transition-colors';
+                    btn.className = 'copy-code-btn absolute top-2 right-2 px-3 py-1.5 bg-gray-700 dark:bg-gray-600 text-white text-xs rounded-lg hover:bg-gray-600 dark:hover:bg-gray-500 transition-colors';
                     btn.textContent = 'Copy';
                     btn.onclick = () => {
                         navigator.clipboard.writeText(code.textContent);
@@ -82,10 +82,10 @@ export default function BlogViewer({ slug }) {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4"></div>
-                    <p className="text-gray-600">Loading blog...</p>
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400 mb-4"></div>
+                    <p className="text-gray-600 dark:text-gray-400">Loading blog...</p>
                 </div>
             </div>
         );
@@ -93,9 +93,9 @@ export default function BlogViewer({ slug }) {
     
     if (!blog) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
                 <div className="text-center">
-                    <p className="text-gray-600 text-lg">Blog not found.</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-lg">Blog not found.</p>
                 </div>
             </div>
         );
@@ -103,14 +103,14 @@ export default function BlogViewer({ slug }) {
 
     return (
         <>
-            <main className="min-h-screen bg-gray-50">
+            <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
                 <div className="max-w-4xl mx-auto px-6 py-12">
                     {/* Header */}
                     <div className="mb-8">
-                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
+                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4 font-serif">
                             {blog.title}
                         </h1>
-                        <div className="flex items-center gap-4 text-gray-600 text-sm">
+                        <div className="flex items-center gap-4 text-gray-600 dark:text-gray-400 text-sm">
                             {blog.published_at && (
                                 <span className="flex items-center gap-1">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,14 +136,20 @@ export default function BlogViewer({ slug }) {
 
                     {/* Table of Contents */}
                     {toc.length > 0 && (
-                        <nav className="mb-8 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Table of Contents</h3>
-                            <ul className="space-y-2">
+                        <nav className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Table of Contents</h3>
+                            <ul className="space-y-1.5">
                                 {toc.map((item, idx) => (
-                                    <li key={idx} className={`${item.level === 1 ? 'ml-0' : item.level === 2 ? 'ml-4' : 'ml-8'}`}>
+                                    <li key={idx} className={`${item.level === 1 ? 'ml-0' : item.level === 2 ? 'ml-4' : item.level === 3 ? 'ml-8' : 'ml-12'}`}>
                                         <a 
                                             href={`#${item.id}`} 
-                                            className="text-primary-600 hover:text-primary-700 transition-colors"
+                                            className={`block py-1.5 px-2 rounded-md transition-all text-sm ${
+                                                item.level === 1 
+                                                    ? 'text-gray-900 dark:text-gray-100 font-medium hover:bg-gray-100 dark:hover:bg-gray-700' 
+                                                    : item.level === 2
+                                                    ? 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                            }`}
                                         >
                                             {item.text}
                                         </a>
@@ -154,7 +160,7 @@ export default function BlogViewer({ slug }) {
                     )}
 
                     {/* Article Content */}
-                    <article ref={articleRef} className="prose prose-lg max-w-none bg-white rounded-xl p-8 md:p-12 shadow-sm border border-gray-200 mb-8">
+                    <article ref={articleRef} className="prose prose-lg max-w-none bg-white dark:bg-gray-800 rounded-xl p-8 md:p-12 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
                         <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             rehypePlugins={[rehypeHighlight]}
@@ -162,17 +168,17 @@ export default function BlogViewer({ slug }) {
                                 h1: ({ node, ...props }) => {
                                     const text = props.children[0];
                                     const id = typeof text === 'string' ? text.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
-                                    return <h1 id={id} className="text-4xl font-bold mb-6 mt-8 text-gray-900" {...props} />;
+                                    return <h1 id={id} className="text-4xl font-bold mb-6 mt-8 text-gray-900 dark:text-gray-100" {...props} />;
                                 },
                                 h2: ({ node, ...props }) => {
                                     const text = props.children[0];
                                     const id = typeof text === 'string' ? text.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
-                                    return <h2 id={id} className="text-3xl font-semibold mb-4 mt-6 text-gray-900" {...props} />;
+                                    return <h2 id={id} className="text-3xl font-semibold mb-4 mt-6 text-gray-900 dark:text-gray-100" {...props} />;
                                 },
                                 h3: ({ node, ...props }) => {
                                     const text = props.children[0];
                                     const id = typeof text === 'string' ? text.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
-                                    return <h3 id={id} className="text-2xl font-semibold mb-3 mt-5 text-gray-900" {...props} />;
+                                    return <h3 id={id} className="text-2xl font-semibold mb-3 mt-5 text-gray-900 dark:text-gray-100" {...props} />;
                                 },
                                 img: ({ node, ...props }) => {
                                     // Fix image URLs to point to backend
@@ -201,12 +207,12 @@ export default function BlogViewer({ slug }) {
                         >
                             {blog.content}
                         </ReactMarkdown>
-                    </article>
+            </article>
 
                     <ReactionButtons blogSlug={slug} />
                     <CommentSection blogSlug={slug} />
                 </div>
-            </main>
+        </main>
 
             {/* Image Modal */}
             {selectedImage && (

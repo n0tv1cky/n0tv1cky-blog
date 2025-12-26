@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -34,15 +34,15 @@
   }
   
   .prose code {
-    @apply bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800;
+    @apply bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800 dark:text-gray-200;
   }
   
   .prose pre {
-    @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4;
+    @apply bg-gray-100 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto mb-4;
   }
   
   .prose pre code {
-    @apply bg-transparent p-0 text-gray-100;
+    @apply bg-transparent p-0 text-gray-800 dark:text-gray-100;
   }
   
   .prose img {

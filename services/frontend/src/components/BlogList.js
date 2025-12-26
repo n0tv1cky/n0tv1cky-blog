@@ -18,10 +18,10 @@ export default function BlogList() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4"></div>
-                    <p className="text-gray-600">Loading blogs...</p>
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400 mb-4"></div>
+                    <p className="text-gray-600 dark:text-gray-400">Loading blogs...</p>
                 </div>
             </div>
         );
@@ -29,18 +29,18 @@ export default function BlogList() {
 
     if (!blogs || blogs.length === 0) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
                 <div className="text-center">
-                    <p className="text-gray-600 text-lg">No blogs found.</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-lg">No blogs found.</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
             <div className="max-w-4xl mx-auto px-6">
-                <h1 className="text-4xl font-bold text-gray-900 mb-8 font-serif">All Blogs</h1>
+                <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-8 font-serif">All Blogs</h1>
                 <div className="space-y-6">
                     {blogs.map(blog => (
                         <BlogCard key={blog.slug} blog={blog} />

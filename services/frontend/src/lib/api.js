@@ -6,26 +6,32 @@ function getBaseUrl() {
         return process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || '';
     } else {
         // Client-side: must use localhost or public URL
-        // Check if NEXT_PUBLIC_BACKEND_URL is set and is a valid client URL
-        const url = process.env.NEXT_PUBLIC_BACKEND_URL || '';
+        // Check window.NEXT_PUBLIC_BACKEND_URL first (set in layout.js), then process.env
+        const url = window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || '';
         // If it contains a Docker service name (no dots, contains underscore), use localhost instead
         if (url && (url.includes('_') || (!url.includes('.') && !url.startsWith('http://localhost') && !url.startsWith('https://')))) {
             // Extract port if present, default to 8000
             const port = url.match(/:(\d+)/)?.[1] || '8000';
             return `http://localhost:${port}`;
         }
+        // If no URL is set, default to localhost:8000 for development
+        if (!url) {
+            return 'http://localhost:8000';
+        }
         return url;
     }
 }
 
-const BASE = getBaseUrl();
-
 async function safeFetch(url) {
     try {
         const res = await fetch(url);
-        if (!res.ok) return null;
+        if (!res.ok) {
+            console.error(`Failed to fetch ${url}: ${res.status} ${res.statusText}`);
+            return null;
+        }
         return await res.json();
     } catch (e) {
+        console.error(`Error fetching ${url}:`, e);
         return null;
     }
 }
@@ -45,6 +51,7 @@ function getAuthHeaders(adminPassword) {
 }
 
 export async function fetchBlogs() {
+    const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/blogs` : `/api/blogs`;
     const data = await safeFetch(url);
     if (data) return data;
@@ -54,6 +61,7 @@ export async function fetchBlogs() {
 
 export async function fetchAllBlogs() {
     // Admin endpoint - returns all blogs (published and drafts)
+    const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/admin/blogs` : `/api/admin/blogs`;
     try {
         const res = await authFetch(url, {
@@ -77,6 +85,7 @@ export async function fetchAllBlogs() {
 }
 
 export async function fetchBlog(slug) {
+    const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/blogs/${slug}` : `/api/blogs/${slug}`;
     const data = await safeFetch(url);
     if (data) return data;
@@ -85,6 +94,7 @@ export async function fetchBlog(slug) {
 }
 
 export async function createBlog(payload, adminPassword) {
+    const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/admin/blogs` : `/api/admin/blogs`;
     try {
         const res = await authFetch(url, {
@@ -104,6 +114,7 @@ export async function createBlog(payload, adminPassword) {
 }
 
 export async function updateBlog(slug, payload, adminPassword) {
+    const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/admin/blogs/${slug}` : `/api/admin/blogs/${slug}`;
     try {
         const res = await authFetch(url, {
@@ -123,6 +134,7 @@ export async function updateBlog(slug, payload, adminPassword) {
 }
 
 export async function uploadImage(file, adminPassword, blogSlug = null) {
+    const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/uploads/image` : `/api/uploads/image`;
     const form = new FormData();
     form.append('file', file, file.name);
@@ -147,6 +159,7 @@ export async function uploadImage(file, adminPassword, blogSlug = null) {
 }
 
 export async function login(password) {
+    const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/admin/auth` : `/api/admin/auth`;
     const res = await postJson(url, { password });
     if (!res.ok) throw new Error('Login failed');
@@ -159,6 +172,7 @@ export async function login(password) {
 }
 
 export async function refreshToken() {
+    const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/admin/auth/refresh` : `/api/admin/auth/refresh`;
     const refresh = (typeof window !== 'undefined') ? localStorage.getItem('admin_refresh') : null;
     if (!refresh) return null;
@@ -173,6 +187,7 @@ export async function refreshToken() {
 }
 
 export async function deleteBlog(slug, adminPassword) {
+    const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/admin/blogs/${slug}` : `/api/admin/blogs/${slug}`;
     try {
         const res = await authFetch(url, {

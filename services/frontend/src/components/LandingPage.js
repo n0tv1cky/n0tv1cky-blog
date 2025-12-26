@@ -26,14 +26,14 @@ export default function LandingPage() {
     }, []);
 
     return (
-        <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
             <div className="max-w-4xl mx-auto px-6 py-16">
                 {/* Hero Section */}
                 <div className="text-center mb-16">
-                    <h1 className="text-5xl font-bold text-gray-900 mb-4 font-serif">
+                    <h1 className="text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4 font-serif">
                         Welcome to n0tv1cky Blog
                     </h1>
-                    <p className="text-xl text-gray-600 mb-8">
+                    <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
                         A modern, minimal blog platform for markdown publishing.
                     </p>
                     <Link href="/blogs">
@@ -46,10 +46,10 @@ export default function LandingPage() {
                 {/* About Section */}
                 {loading ? (
                     <div className="text-center py-12">
-                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 dark:border-primary-400"></div>
                     </div>
                 ) : aboutContent ? (
-                    <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 md:p-12">
+                    <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 md:p-12">
                         <div className="prose prose-lg max-w-none">
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}

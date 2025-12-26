@@ -22,7 +22,6 @@ export default function CommentSection({ blogSlug }) {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [authorName, setAuthorName] = useState('');
-    const [authorEmail, setAuthorEmail] = useState('');
     const [content, setContent] = useState('');
     const [error, setError] = useState(null);
 
@@ -70,7 +69,6 @@ export default function CommentSection({ blogSlug }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     author_name: authorName.trim(),
-                    ...(authorEmail.trim() && { author_email: authorEmail.trim() }),
                     content: content.trim()
                 })
             });
@@ -90,7 +88,6 @@ export default function CommentSection({ blogSlug }) {
             setComments([newComment, ...comments]);
             setContent('');
             setAuthorName('');
-            setAuthorEmail('');
             toast.success('Comment submitted successfully!');
         } catch (e) {
             toast.error('Network error. Please try again.');
@@ -114,45 +111,25 @@ export default function CommentSection({ blogSlug }) {
     }
 
     return (
-        <div className="mt-12 pt-8 border-t border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
                 Comments ({comments.length})
             </h2>
 
-            <form onSubmit={handleSubmit} className="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
+            <form onSubmit={handleSubmit} className="mb-8 p-5 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
                 <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Name <span className="text-red-500">*</span>
-                    </label>
                     <input
                         type="text"
                         value={authorName}
                         onChange={(e) => setAuthorName(e.target.value)}
                         required
                         maxLength={100}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                        className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                         placeholder="Your name"
                     />
                 </div>
 
                 <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email (optional)
-                    </label>
-                    <input
-                        type="email"
-                        value={authorEmail}
-                        onChange={(e) => setAuthorEmail(e.target.value)}
-                        maxLength={255}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
-                        placeholder="your.email@example.com"
-                    />
-                </div>
-
-                <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Comment <span className="text-red-500">*</span>
-                    </label>
                     <textarea
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
@@ -160,43 +137,38 @@ export default function CommentSection({ blogSlug }) {
                         minLength={3}
                         maxLength={5000}
                         rows={4}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all resize-none"
-                        placeholder="Write your comment here..."
+                        className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all resize-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="Write your comment..."
                     />
-                    <div className="text-sm text-gray-500 mt-1">
-                        {content.length}/5000 characters
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
+                        {content.length}/5000
                     </div>
                 </div>
 
                 <button
                     type="submit"
                     disabled={submitting}
-                    className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${submitting
+                    className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${submitting
                         ? 'bg-gray-400 cursor-not-allowed'
                         : 'bg-primary-600 hover:bg-primary-700 shadow-sm hover:shadow-md'
                         } text-white`}
                 >
-                    {submitting ? 'Submitting...' : 'Submit Comment'}
+                    {submitting ? 'Submitting...' : 'Post Comment'}
                 </button>
             </form>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
                 {comments.length === 0 ? (
-                    <p className="text-gray-500 italic text-center py-8">No comments yet. Be the first to comment!</p>
+                    <p className="text-gray-500 dark:text-gray-400 italic text-center py-8">No comments yet. Be the first to comment!</p>
                 ) : (
                     comments.map((comment) => (
                         <div
                             key={comment.id}
-                            className="bg-white rounded-lg border-l-4 border-primary-500 p-5 shadow-sm hover:shadow-md transition-shadow"
+                            className="bg-white dark:bg-gray-800 rounded-lg border-l-2 border-primary-500 dark:border-primary-400 p-4 shadow-sm hover:shadow-md transition-shadow"
                         >
-                            <div className="flex justify-between items-start mb-3">
-                                <div>
-                                    <strong className="text-gray-900 font-medium">{comment.author_name}</strong>
-                                    {comment.author_email && (
-                                        <span className="text-sm text-gray-500 ml-2">({comment.author_email})</span>
-                                    )}
-                                </div>
-                                <span className="text-sm text-gray-500">
+                            <div className="flex justify-between items-start mb-2">
+                                <strong className="text-gray-900 dark:text-gray-100 font-medium text-sm">{comment.author_name}</strong>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
                                     {comment.created_at ? new Date(comment.created_at).toLocaleDateString('en-IN', {
                                         year: 'numeric',
                                         month: 'short',
@@ -206,7 +178,7 @@ export default function CommentSection({ blogSlug }) {
                                     }) : ''}
                                 </span>
                             </div>
-                            <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                            <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed text-sm">
                                 {comment.content}
                             </div>
                         </div>

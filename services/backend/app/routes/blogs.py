@@ -86,6 +86,11 @@ async def get_blog(slug: str):
 		raise HTTPException(status_code=404, detail="Blog not found")
 	front, content = parse_markdown_file(files[0])
 	front = front or {}
+	
+	# Check if blog is published - only serve published blogs to public
+	if not front.get('published', False):
+		raise HTTPException(status_code=404, detail="Blog not found")
+	
 	front['content'] = content
 	
 	# Convert datetime objects to ISO strings for JSON serialization

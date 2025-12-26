@@ -1,11 +1,13 @@
 import '../styles/globals.css';
 import Toast from '../components/Toast';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function RootLayout({ children }) {
     return (
-        <html lang="en">
-            <body className="min-h-screen">
+        <html lang="en" suppressHydrationWarning>
+            <body className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
                 {children}
+                <ThemeToggle />
                 <Toast />
             </body>
         </html>
