@@ -172,6 +172,23 @@ export async function refreshToken() {
     return null;
 }
 
+export async function deleteBlog(slug, adminPassword) {
+    const url = BASE ? `${BASE}/api/admin/blogs/${slug}` : `/api/admin/blogs/${slug}`;
+    try {
+        const res = await authFetch(url, {
+            method: 'DELETE',
+            adminPassword
+        });
+        if (!res.ok) {
+            const text = await res.text();
+            throw new Error(text || 'Delete failed');
+        }
+        return await res.json();
+    } catch (e) {
+        throw e;
+    }
+}
+
 export function logout() {
     if (typeof window !== 'undefined') {
         localStorage.removeItem('admin_token');

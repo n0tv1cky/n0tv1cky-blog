@@ -172,8 +172,8 @@ export default function CommentSection({ blogSlug }) {
                     type="submit"
                     disabled={submitting}
                     className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${submitting
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : 'bg-primary-600 hover:bg-primary-700 shadow-sm hover:shadow-md'
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-primary-600 hover:bg-primary-700 shadow-sm hover:shadow-md'
                         } text-white`}
                 >
                     {submitting ? 'Submitting...' : 'Submit Comment'}
