@@ -8,10 +8,10 @@ updated_at: 2025-01-01T00:00:00Z
 
 # About Me
 
-I’m a systems‑minded software engineer who enjoys building reliable, production‑grade software. I work across the stack—backend, frontend, and infrastructure—owning projects from design to deployment.
+I’m a systems-minded software engineer who enjoys building reliable, production-grade software—and understanding what happens when it doesn’t behave as expected. I work across the stack—backend, frontend, and infrastructure—often owning projects end-to-end, from design to deployment.
 
-I build with **Node.js**, **Next.js**, **Docker**, and **Kubernetes**, and I’m comfortable managing CI/CD pipelines, cloud deployments, and domain configurations. My work often blends **AI systems** with engineering—deploying LLM and multimodal models, optimizing inference, and automating document workflows.
+I love building things, often breaking them, and learning from the failures and experiments that follow. This blog is a reflection of that process: what I tried, what went wrong, what worked, and what I’d do differently next time. Much of my work sits at the intersection of **AI systems and engineering**—deploying LLM and multimodal models, optimizing inference, and automating document-heavy workflows.
 
-I value clean design, observability, and security in production. Beyond writing code, I care deeply about how things run, scale, and recover.
+I care deeply about clean design, observability, and security in production. Writing code is only part of the job for me; I’m equally interested in how systems scale, fail, recover, and evolve over time.
 
-Outside of work, I explore hardware and distributed systems, experiment with clusters and GPUs, and write about what I learn here—one system at a time.
+Outside of coding, I run, swim, play badminton, and enjoy photography.

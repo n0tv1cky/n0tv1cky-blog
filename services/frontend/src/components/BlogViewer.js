@@ -107,11 +107,107 @@ export default function BlogViewer({ slug }) {
         );
     }
 
+    // Fix: Custom Markdown components for text color in dark mode
+    // Make sure non-header and non-code text is always light in dark mode
+
+    const markdownComponents = {
+        h1: ({ node, ...props }) => {
+            const extractText = (children) => {
+                if (typeof children === 'string') return children;
+                if (Array.isArray(children)) return children.map(extractText).join('');
+                if (children?.props?.children) return extractText(children.props.children);
+                return '';
+            };
+
+            const text = extractText(props.children);
+            const id = generateId(text);
+            return <h1 id={id} className="text-4xl font-bold mb-6 mt-8 text-gray-900 dark:text-gray-100" {...props} />;
+        },
+        h2: ({ node, ...props }) => {
+            const extractText = (children) => {
+                if (typeof children === 'string') return children;
+                if (Array.isArray(children)) return children.map(extractText).join('');
+                if (children?.props?.children) return extractText(children.props.children);
+                return '';
+            };
+
+            const text = extractText(props.children);
+            const id = generateId(text);
+            return <h2 id={id} className="text-3xl font-semibold mb-4 mt-6 text-gray-900 dark:text-gray-100" {...props} />;
+        },
+        h3: ({ node, ...props }) => {
+            const extractText = (children) => {
+                if (typeof children === 'string') return children;
+                if (Array.isArray(children)) return children.map(extractText).join('');
+                if (children?.props?.children) return extractText(children.props.children);
+                return '';
+            };
+
+            const text = extractText(props.children);
+            const id = generateId(text);
+            return <h3 id={id} className="text-2xl font-semibold mb-3 mt-5 text-gray-900 dark:text-gray-100" {...props} />;
+        },
+        img: ({ node, ...props }) => {
+            // Fix image URLs to point to backend
+            let src = props.src || '';
+            if (src && src.startsWith('/images/')) {
+                // Get backend URL from env
+                const backendUrl = typeof window !== 'undefined'
+                    ? (window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000')
+                    : 'http://localhost:8000';
+                // Convert Docker service name to localhost if needed
+                const baseUrl = backendUrl.includes('_') || (!backendUrl.includes('.') && !backendUrl.startsWith('http://localhost') && !backendUrl.startsWith('https://'))
+                    ? `http://localhost:${backendUrl.match(/:(\d+)/)?.[1] || '8000'}`
+                    : backendUrl;
+                src = `${baseUrl}${src}`;
+            }
+            return (
+                <img
+                    {...props}
+                    src={src}
+                    className="max-w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setSelectedImage(src)}
+                />
+            );
+        },
+        // Add custom p renderer for proper dark mode text
+        p: ({ node, ...props }) => (
+            <p className="text-gray-800 dark:text-gray-100" {...props} />
+        ),
+        ul: ({ node, ...props }) => (
+            <ul className="text-gray-800 dark:text-gray-100" {...props} />
+        ),
+        ol: ({ node, ...props }) => (
+            <ol className="text-gray-800 dark:text-gray-100" {...props} />
+        ),
+        li: ({ node, ...props }) => (
+            <li className="text-gray-800 dark:text-gray-100" {...props} />
+        ),
+        blockquote: ({ node, ...props }) => (
+            <blockquote className="text-gray-700 dark:text-gray-200 border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic" {...props} />
+        ),
+        // Let code/inlineCode/pre default renderer or highlight.js handle colors for code blocks
+    };
 
     return (
         <>
             <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
                 <div className="max-w-4xl mx-auto px-6 py-12">
+                    {/* Back Button */}
+                    <button
+                        onClick={() => window.location.href = '/blogs'}
+                        className="mb-6 flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors group"
+                    >
+                        <svg
+                            className="w-5 h-5 transition-transform group-hover:-translate-x-1"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        <span className="font-medium">Back to All Blogs</span>
+                    </button>
                     {/* Header */}
                     <div className="mb-8">
                         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4 font-serif">
@@ -204,71 +300,11 @@ export default function BlogViewer({ slug }) {
                         </nav>
                     )}
                     {/* Article Content */}
-                    <article ref={articleRef} className="prose prose-lg max-w-none bg-white dark:bg-gray-800 rounded-xl p-8 md:p-12 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
+                    <article ref={articleRef} className="prose prose-lg max-w-none bg-white dark:bg-gray-800 rounded-xl p-8 md:p-12 shadow-sm border border-gray-200 dark:border-gray-700 mb-8 !text-gray-800 dark:!text-gray-100">
                         <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             rehypePlugins={[rehypeHighlight]}
-                            components={{
-                                h1: ({ node, ...props }) => {
-                                    const extractText = (children) => {
-                                        if (typeof children === 'string') return children;
-                                        if (Array.isArray(children)) return children.map(extractText).join('');
-                                        if (children?.props?.children) return extractText(children.props.children);
-                                        return '';
-                                    };
-
-                                    const text = extractText(props.children);
-                                    const id = generateId(text);
-                                    return <h1 id={id} className="text-4xl font-bold mb-6 mt-8 text-gray-900 dark:text-gray-100" {...props} />;
-                                },
-                                h2: ({ node, ...props }) => {
-                                    const extractText = (children) => {
-                                        if (typeof children === 'string') return children;
-                                        if (Array.isArray(children)) return children.map(extractText).join('');
-                                        if (children?.props?.children) return extractText(children.props.children);
-                                        return '';
-                                    };
-
-                                    const text = extractText(props.children);
-                                    const id = generateId(text);
-                                    return <h2 id={id} className="text-3xl font-semibold mb-4 mt-6 text-gray-900 dark:text-gray-100" {...props} />;
-                                },
-                                h3: ({ node, ...props }) => {
-                                    const extractText = (children) => {
-                                        if (typeof children === 'string') return children;
-                                        if (Array.isArray(children)) return children.map(extractText).join('');
-                                        if (children?.props?.children) return extractText(children.props.children);
-                                        return '';
-                                    };
-
-                                    const text = extractText(props.children);
-                                    const id = generateId(text);
-                                    return <h3 id={id} className="text-2xl font-semibold mb-3 mt-5 text-gray-900 dark:text-gray-100" {...props} />;
-                                },
-                                img: ({ node, ...props }) => {
-                                    // Fix image URLs to point to backend
-                                    let src = props.src || '';
-                                    if (src && src.startsWith('/images/')) {
-                                        // Get backend URL from env
-                                        const backendUrl = typeof window !== 'undefined'
-                                            ? (window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000')
-                                            : 'http://localhost:8000';
-                                        // Convert Docker service name to localhost if needed
-                                        const baseUrl = backendUrl.includes('_') || (!backendUrl.includes('.') && !backendUrl.startsWith('http://localhost') && !backendUrl.startsWith('https://'))
-                                            ? `http://localhost:${backendUrl.match(/:(\d+)/)?.[1] || '8000'}`
-                                            : backendUrl;
-                                        src = `${baseUrl}${src}`;
-                                    }
-                                    return (
-                                        <img
-                                            {...props}
-                                            src={src}
-                                            className="max-w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                                            onClick={() => setSelectedImage(src)}
-                                        />
-                                    );
-                                }
-                            }}
+                            components={markdownComponents}
                         >
                             {blog.content}
                         </ReactMarkdown>
