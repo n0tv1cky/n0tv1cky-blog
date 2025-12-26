@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Header, HTTPException, status
+from app.auth import create_access_token, verify_token, create_refresh_token
 from pydantic import BaseModel
 import os
 import datetime
@@ -38,7 +39,43 @@ def require_admin(password: str = None, authorization: str = None):
 		token = authorization.split(' ', 1)[1].strip()
 		if ADMIN_TOKEN and token == ADMIN_TOKEN:
 			return
+		# verify JWT
+		payload = verify_token(token)
+		if payload:
+			return
 	raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Invalid admin credentials')
+
+
+
+
+@router.post('/auth')
+async def admin_auth(password: str):
+	# Simple login endpoint: returns JWT if password matches
+	if password != ADMIN_PASSWORD:
+		raise HTTPException(status_code=401, detail='Invalid credentials')
+	access = create_access_token({'sub': 'admin'})
+	refresh = create_refresh_token({'sub': 'admin'})
+	return {'access_token': access, 'refresh_token': refresh, 'token_type': 'bearer'}
+
+
+
+class RefreshRequest(BaseModel):
+	refresh_token: str
+
+
+@router.post('/auth/refresh')
+async def refresh_token(req: RefreshRequest):
+	# Accept a refresh token and return a new access token
+	token = req.refresh_token
+	payload = verify_token(token)
+	if not payload:
+		raise HTTPException(status_code=401, detail='Invalid refresh token')
+	# ensure token type is refresh (or allow if missing for backward compat)
+	if payload.get('typ') and payload.get('typ') != 'refresh':
+		raise HTTPException(status_code=401, detail='Invalid token type')
+	# issue a new access token
+	access = create_access_token({'sub': payload.get('sub', 'admin')})
+	return {'access_token': access, 'token_type': 'bearer'}
 
 
 @router.post('/blogs')

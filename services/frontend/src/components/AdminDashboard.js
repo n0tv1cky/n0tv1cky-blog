@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { fetchBlogs } from '../lib/api';
 
 export default function AdminDashboard() {
     const [blogs, setBlogs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
         let mounted = true;
@@ -15,11 +17,27 @@ export default function AdminDashboard() {
         return () => { mounted = false; };
     }, []);
 
+    function handleLogout() {
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('admin_token');
+            router.refresh();
+        }
+    }
+
+    const hasToken = (typeof window !== 'undefined') ? !!localStorage.getItem('admin_token') : false;
+
     return (
         <main style={{ padding: '1.5rem' }}>
             <h1>Admin Dashboard</h1>
             <div style={{ margin: '1rem 0' }}>
-                <Link href="/admin/new"><button>Create New Blog</button></Link>
+                {hasToken ? (
+                    <>
+                        <Link href="/admin/new"><button>Create New Blog</button></Link>
+                        <button onClick={handleLogout} style={{ marginLeft: 12 }}>Log out</button>
+                    </>
+                ) : (
+                    <Link href="/admin/login"><button>Log in</button></Link>
+                )}
             </div>
 
             <section>

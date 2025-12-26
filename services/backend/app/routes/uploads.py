@@ -2,6 +2,7 @@ from fastapi import APIRouter, File, UploadFile, Header, HTTPException
 import os
 import datetime
 from pathlib import Path
+from app.auth import verify_token
 
 router = APIRouter()
 
@@ -22,6 +23,10 @@ def require_admin(password: str = None, authorization: str = None):
 	if authorization and authorization.startswith('Bearer '):
 		token = authorization.split(' ', 1)[1].strip()
 		if ADMIN_TOKEN and token == ADMIN_TOKEN:
+			return
+		# verify JWT
+		payload = verify_token(token)
+		if payload:
 			return
 	raise HTTPException(status_code=403, detail='Invalid admin credentials')
 
