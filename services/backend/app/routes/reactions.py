@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request, Query
 from app.database import SessionLocal
 from app.models import Reaction, Blog, ReactionType
-from app.ratelimit import rate_limiter, get_client_id
+from app.ratelimit import get_client_id
 from app.utils import get_ist_now
 import uuid
 import logging
@@ -35,9 +35,20 @@ async def get_reactions(slug: str):
 
 
 @router.post("/{slug}/react")
-@rate_limiter('react')
 async def add_reaction(slug: str, request: Request, reaction_type: str = Query(..., description="Reaction type: 'like' or 'dislike'")):
 	"""Add or update a reaction (rate limited: 10/hour per IP)"""
+	# Apply rate limiting manually (decorator interferes with FastAPI parameter injection)
+	from app.ratelimit import RATE_LIMITS, rate_limits
+	import time
+	client_id = get_client_id(request)
+	max_calls, period = RATE_LIMITS.get('react', (10, 3600))
+	now = time.time()
+	calls = rate_limits[(client_id, 'react')]
+	rate_limits[(client_id, 'react')] = [t for t in calls if now - t < period]
+	if len(rate_limits[(client_id, 'react')]) >= max_calls:
+		raise HTTPException(status_code=429, detail='Rate limit exceeded')
+	rate_limits[(client_id, 'react')].append(now)
+	
 	db = SessionLocal()
 	try:
 		# Verify blog exists
