@@ -7,25 +7,31 @@ import { fetchBlogs } from '../lib/api';
 export default function AdminDashboard() {
     const [blogs, setBlogs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [hasToken, setHasToken] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
-        let mounted = true;
+        // Check token only on client side after mount to avoid hydration mismatch
+        const token = typeof window !== 'undefined' ? !!localStorage.getItem('admin_token') : false;
+        setHasToken(token);
+    }, []);
+
+    useEffect(() => {
+        let isMounted = true;
         fetchBlogs().then((data) => {
-            if (mounted) setBlogs(data || []);
+            if (isMounted) setBlogs(data || []);
             setLoading(false);
         }).catch(() => setLoading(false));
-        return () => { mounted = false; };
+        return () => { isMounted = false; };
     }, []);
 
     function handleLogout() {
         if (typeof window !== 'undefined') {
             localStorage.removeItem('admin_token');
+            setHasToken(false);
             router.refresh();
         }
     }
-
-    const hasToken = (typeof window !== 'undefined') ? !!localStorage.getItem('admin_token') : false;
 
     return (
         <main style={{ padding: '1.5rem' }}>
