@@ -1,7 +1,20 @@
 "use client";
 import { useEffect, useState } from 'react';
 
-const BASE = typeof window !== 'undefined' && process.env.NEXT_PUBLIC_BACKEND_URL ? process.env.NEXT_PUBLIC_BACKEND_URL : '';
+// Helper to get base URL - convert Docker service names to localhost for client-side
+function getBaseUrl() {
+    if (typeof window === 'undefined') {
+        return process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || '';
+    }
+    const url = process.env.NEXT_PUBLIC_BACKEND_URL || '';
+    // If it's a Docker service name (contains underscore or no dots), use localhost
+    if (url && (url.includes('_') || (!url.includes('.') && !url.startsWith('http://localhost') && !url.startsWith('https://')))) {
+        const port = url.match(/:(\d+)/)?.[1] || '8000';
+        return `http://localhost:${port}`;
+    }
+    return url;
+}
+const BASE = getBaseUrl();
 
 export default function CommentSection({ blogSlug }) {
     const [comments, setComments] = useState([]);

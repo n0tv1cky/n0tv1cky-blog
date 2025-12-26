@@ -1,4 +1,24 @@
-const BASE = typeof window !== 'undefined' && process.env.NEXT_PUBLIC_BACKEND_URL ? process.env.NEXT_PUBLIC_BACKEND_URL : '';
+// For client-side requests, use localhost or the public URL
+// Docker service names only work server-side
+function getBaseUrl() {
+    if (typeof window === 'undefined') {
+        // Server-side: can use Docker service name
+        return process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || '';
+    } else {
+        // Client-side: must use localhost or public URL
+        // Check if NEXT_PUBLIC_BACKEND_URL is set and is a valid client URL
+        const url = process.env.NEXT_PUBLIC_BACKEND_URL || '';
+        // If it contains a Docker service name (no dots, contains underscore), use localhost instead
+        if (url && (url.includes('_') || (!url.includes('.') && !url.startsWith('http://localhost') && !url.startsWith('https://')))) {
+            // Extract port if present, default to 8000
+            const port = url.match(/:(\d+)/)?.[1] || '8000';
+            return `http://localhost:${port}`;
+        }
+        return url;
+    }
+}
+
+const BASE = getBaseUrl();
 
 async function safeFetch(url) {
     try {

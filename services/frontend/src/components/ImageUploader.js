@@ -13,7 +13,18 @@ export default function ImageUploader({ adminPassword, onUpload }) {
             form.append('file', file, file.name);
 
             const xhr = new XMLHttpRequest();
-            const url = (typeof window !== 'undefined' && window.NEXT_PUBLIC_BACKEND_URL) ? `${window.NEXT_PUBLIC_BACKEND_URL}/api/uploads/image` : `/api/uploads/image`;
+            // Convert Docker service name to localhost for client-side requests
+            let baseUrl = '';
+            if (typeof window !== 'undefined' && window.NEXT_PUBLIC_BACKEND_URL) {
+                const url = window.NEXT_PUBLIC_BACKEND_URL;
+                if (url.includes('_') || (!url.includes('.') && !url.startsWith('http://localhost') && !url.startsWith('https://'))) {
+                    const port = url.match(/:(\d+)/)?.[1] || '8000';
+                    baseUrl = `http://localhost:${port}`;
+                } else {
+                    baseUrl = url;
+                }
+            }
+            const url = baseUrl ? `${baseUrl}/api/uploads/image` : `/api/uploads/image`;
             xhr.open('POST', url);
             if (adminPassword) xhr.setRequestHeader('X-ADMIN-PASSWORD', adminPassword);
             if (typeof window !== 'undefined' && window.NEXT_PUBLIC_ADMIN_TOKEN) xhr.setRequestHeader('Authorization', `Bearer ${window.NEXT_PUBLIC_ADMIN_TOKEN}`);
