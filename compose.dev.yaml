@@ -34,7 +34,7 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - ${POSTGRES_CONTAINER_NAME}
+      - postgres
     networks:
       - blognet
 
@@ -44,6 +44,7 @@ services:
     command: npm run dev
     volumes:
       - ./services/frontend:/app
+      - /app/node_modules
     env_file:
       - .env.dev
     environment:
@@ -53,7 +54,7 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - ${BACKEND_CONTAINER_NAME}
+      - backend
     networks:
       - blognet
 

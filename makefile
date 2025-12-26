@@ -1,28 +1,28 @@
 # Development
 dev-up:
-	docker compose -f compose.dev.yaml up --build
+	docker compose -f compose.dev.yaml --env-file .env.dev up --build
 
 dev-up-bg:
-	docker compose -f compose.dev.yaml up -d
+	docker compose -f compose.dev.yaml --env-file .env.dev up -d
 
 dev-logs:
-	docker compose -f compose.dev.yaml logs -f
+	docker compose -f compose.dev.yaml --env-file .env.dev logs -f
 
 dev-down:
-	docker compose -f compose.dev.yaml down
+	docker compose -f compose.dev.yaml --env-file .env.dev down
 
 dev-rebuild-frontend:
-	docker compose -f compose.dev.yaml up --build frontend
+	docker compose -f compose.dev.yaml --env-file .env.dev up --build frontend
 
 # Production
 prod-up:
-	docker compose -f compose.prod.yaml up -d
+	docker compose -f compose.prod.yaml --env-file .env.prod up -d
 
 prod-logs-backend:
-	docker compose -f compose.prod.yaml logs -f backend
+	docker compose -f compose.prod.yaml --env-file .env.prod logs -f backend
 
 prod-restart-frontend:
-	docker compose -f compose.prod.yaml restart frontend
+	docker compose -f compose.prod.yaml --env-file .env.prod restart frontend
 
 prod-down:
-	docker compose -f compose.prod.yaml down
+	docker compose -f compose.prod.yaml --env-file .env.prod down

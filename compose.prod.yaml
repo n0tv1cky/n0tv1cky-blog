@@ -32,7 +32,7 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - ${POSTGRES_CONTAINER_NAME}
+      - postgres
     networks:
       - blognet
 
@@ -51,7 +51,7 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - ${BACKEND_CONTAINER_NAME}
+      - backend
     networks:
       - blognet
 
