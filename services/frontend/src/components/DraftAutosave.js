@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function DraftAutosave({ enabled = true, title, slug, description, content, onSave }) {
     const [status, setStatus] = useState('');
@@ -34,6 +35,7 @@ export default function DraftAutosave({ enabled = true, title, slug, description
 
                 setStatus('Saved');
                 lastSavedRef.current = new Date();
+                toast.success('Draft saved', { duration: 2000 });
                 setTimeout(() => setStatus(''), 2000);
             }
         }, 30000); // 30 seconds

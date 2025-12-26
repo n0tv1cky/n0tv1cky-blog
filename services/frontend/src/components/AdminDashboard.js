@@ -20,9 +20,19 @@ export default function AdminDashboard() {
     useEffect(() => {
         let isMounted = true;
         fetchAllBlogs().then((data) => {
-            if (isMounted) setBlogs(data || []);
-            setLoading(false);
-        }).catch(() => setLoading(false));
+            if (isMounted) {
+                setBlogs(data || []);
+                setLoading(false);
+            }
+        }).catch((error) => {
+            if (isMounted) {
+                setLoading(false);
+                // Check if it's a 403 error
+                if (error?.status === 403 || error?.message?.includes('403')) {
+                    toast.error('Invalid credentials. Please log in again.');
+                }
+            }
+        });
         return () => { isMounted = false; };
     }, []);
 

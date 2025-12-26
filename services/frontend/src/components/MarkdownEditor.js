@@ -119,10 +119,18 @@ export default function MarkdownEditor({ mode, slug }) {
         try {
             if (mode === 'new') {
                 await createBlog(payload, adminPassword);
-                toast.success('Blog created successfully!');
+                if (published) {
+                    toast.success('Blog published successfully!');
+                } else {
+                    toast.success('Blog saved as draft!');
+                }
             } else {
                 await updateBlog(slug, payload, adminPassword);
-                toast.success('Blog updated successfully!');
+                if (published) {
+                    toast.success('Blog published successfully!');
+                } else {
+                    toast.success('Blog updated successfully!');
+                }
             }
             router.push('/admin');
         } catch (e) {

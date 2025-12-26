@@ -59,11 +59,19 @@ export async function fetchAllBlogs() {
         const res = await authFetch(url, {
             method: 'GET'
         });
+        if (res.status === 403) {
+            const error = new Error('Invalid credentials');
+            error.status = 403;
+            throw error;
+        }
         if (!res.ok) {
             return [];
         }
         return await res.json();
     } catch (e) {
+        if (e.status === 403) {
+            throw e; // Re-throw 403 errors to be handled by component
+        }
         return [];
     }
 }
@@ -194,6 +202,15 @@ async function authFetch(url, opts = {}) {
             res = await fetch(url, { method, headers, body });
         } else {
             // logout if refresh failed
+            logout();
+        }
+    } else if (res.status === 403) {
+        // Handle 403 Forbidden - invalid credentials
+        if (typeof window !== 'undefined') {
+            // Dynamic import to avoid SSR issues
+            import('react-hot-toast').then(({ default: toast }) => {
+                toast.error('Invalid credentials. Please log in again.');
+            });
             logout();
         }
     }
