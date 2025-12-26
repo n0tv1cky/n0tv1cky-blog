@@ -21,6 +21,8 @@ export default function MarkdownEditor({ mode, slug }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [viewMode, setViewMode] = useState('edit'); // 'edit', 'preview', 'split'
+    const [splitPosition, setSplitPosition] = useState(50); // Percentage for split view
+    const [isDragging, setIsDragging] = useState(false);
 
     useEffect(() => {
         if (mode === 'edit' && slug) {
@@ -82,6 +84,34 @@ export default function MarkdownEditor({ mode, slug }) {
         return () => window.removeEventListener('paste', handlePaste);
     }, [adminPassword, blogSlug, title]);
 
+    // Handle drag for split view divider
+    useEffect(() => {
+        if (!isDragging) return;
+
+        function handleMouseMove(e) {
+            if (!isDragging) return;
+            const container = document.querySelector('.markdown-editor-container');
+            if (!container) return;
+            const rect = container.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percentage = (x / rect.width) * 100;
+            // Constrain between 20% and 80%
+            const constrained = Math.max(20, Math.min(80, percentage));
+            setSplitPosition(constrained);
+        }
+
+        function handleMouseUp() {
+            setIsDragging(false);
+        }
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isDragging]);
+
     async function handleSave() {
         setLoading(true);
         setError(null);
@@ -106,7 +136,7 @@ export default function MarkdownEditor({ mode, slug }) {
 
     return (
         <main className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-6 py-12">
+            <div className="w-full px-6 py-12">
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold text-gray-900 font-serif mb-2">
                         {mode === 'new' ? 'New Blog' : `Edit: ${slug}`}
@@ -211,19 +241,40 @@ export default function MarkdownEditor({ mode, slug }) {
                                 </button>
                             </div>
                         </div>
-                        <div className="flex gap-4 min-h-[500px]">
+                        <div className="markdown-editor-container flex gap-0 min-h-[500px] relative">
                             {(viewMode === 'edit' || viewMode === 'split') && (
-                                <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'}`}>
+                                <div 
+                                    className={`${viewMode === 'split' ? '' : 'w-full'}`}
+                                    style={viewMode === 'split' ? { width: `${splitPosition}%` } : {}}
+                                >
                                     <textarea
                                         value={content}
                                         onChange={e => setContent(e.target.value)}
-                                        className="w-full h-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all font-mono text-sm resize-none"
+                                        className={`w-full h-full px-4 py-3 border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all font-mono text-sm resize-none ${
+                                            viewMode === 'split' ? 'rounded-l-lg' : 'rounded-lg'
+                                        }`}
                                         placeholder="Write your markdown content here..."
                                     />
                                 </div>
                             )}
+                            {viewMode === 'split' && (
+                                <div
+                                    className="w-1 bg-gray-300 hover:bg-primary-500 cursor-col-resize transition-colors flex items-center justify-center group relative z-10"
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        setIsDragging(true);
+                                    }}
+                                >
+                                    <div className="w-1 h-12 bg-gray-400 group-hover:bg-primary-600 rounded transition-colors"></div>
+                                </div>
+                            )}
                             {(viewMode === 'preview' || viewMode === 'split') && (
-                                <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'} border border-gray-300 rounded-lg p-6 bg-white overflow-auto`}>
+                                <div 
+                                    className={`${viewMode === 'split' ? 'border-l-0' : 'w-full'} border border-gray-300 p-6 bg-white overflow-auto ${
+                                        viewMode === 'split' ? 'rounded-r-lg' : 'rounded-lg'
+                                    }`}
+                                    style={viewMode === 'split' ? { width: `${100 - splitPosition}%` } : {}}
+                                >
                                     <div className="prose max-w-none">
                                         <ReactMarkdown
                                             remarkPlugins={[remarkGfm]}
