@@ -1,9 +1,13 @@
 import '../styles/globals.css';
+import Toast from '../components/Toast';
 
 export default function RootLayout({ children }) {
     return (
         <html lang="en">
-            <body>{children}</body>
+            <body className="min-h-screen">
+                {children}
+                <Toast />
+            </body>
         </html>
     );
 }

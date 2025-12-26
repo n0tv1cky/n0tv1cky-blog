@@ -6,6 +6,7 @@ import rehypeHighlight from 'rehype-highlight';
 import { fetchBlog } from '../lib/api';
 import CommentSection from './CommentSection';
 import ReactionButtons from './ReactionButtons';
+import toast from 'react-hot-toast';
 import 'highlight.js/styles/github.css';
 
 export default function BlogViewer({ slug }) {
@@ -64,138 +65,164 @@ export default function BlogViewer({ slug }) {
                 const pre = code.parentElement;
                 if (!pre.querySelector('.copy-code-btn')) {
                     const btn = document.createElement('button');
-                    btn.className = 'copy-code-btn';
+                    btn.className = 'copy-code-btn absolute top-2 right-2 px-3 py-1.5 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-700 transition-colors';
                     btn.textContent = 'Copy';
-                    btn.style.cssText = 'position:absolute;top:8px;right:8px;padding:4px 8px;background:#333;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;';
                     btn.onclick = () => {
                         navigator.clipboard.writeText(code.textContent);
                         btn.textContent = 'Copied!';
+                        toast.success('Code copied to clipboard!');
                         setTimeout(() => btn.textContent = 'Copy', 2000);
                     };
-                    pre.style.position = 'relative';
+                    pre.classList.add('relative');
                     pre.appendChild(btn);
                 }
             });
         }
     }, [blog]);
 
-    if (loading) return <div>Loading...</div>;
-    if (!blog) return <div>Blog not found.</div>;
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4"></div>
+                    <p className="text-gray-600">Loading blog...</p>
+                </div>
+            </div>
+        );
+    }
+    
+    if (!blog) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-gray-600 text-lg">Blog not found.</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <>
-            <main style={{ padding: '1.5rem', maxWidth: '800px', margin: '0 auto' }}>
-                <h1>{blog.title}</h1>
-                <div style={{ color: '#666', marginBottom: 12 }}>
-                    {blog.published_at && new Date(blog.published_at).toLocaleDateString()}
-                    {blog.reading_time && ` • ${blog.reading_time} min read`}
-                </div>
+            <main className="min-h-screen bg-gray-50">
+                <div className="max-w-4xl mx-auto px-6 py-12">
+                    {/* Header */}
+                    <div className="mb-8">
+                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
+                            {blog.title}
+                        </h1>
+                        <div className="flex items-center gap-4 text-gray-600 text-sm">
+                            {blog.published_at && (
+                                <span className="flex items-center gap-1">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    {new Date(blog.published_at).toLocaleDateString('en-IN', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    })}
+                                </span>
+                            )}
+                            {blog.reading_time && (
+                                <span className="flex items-center gap-1">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    {blog.reading_time} min read
+                                </span>
+                            )}
+                        </div>
+                    </div>
 
-                {toc.length > 0 && (
-                    <nav style={{ marginBottom: '2rem', padding: '1rem', background: '#f5f5f5', borderRadius: '8px' }}>
-                        <h3 style={{ marginTop: 0 }}>Table of Contents</h3>
-                        <ul style={{ margin: 0, paddingLeft: '1.5rem' }}>
-                            {toc.map((item, idx) => (
-                                <li key={idx} style={{ marginLeft: `${(item.level - 1) * 1}rem`, marginBottom: '0.5rem' }}>
-                                    <a href={`#${item.id}`} style={{ color: '#0066cc', textDecoration: 'none' }}>
-                                        {item.text}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
-                    </nav>
-                )}
+                    {/* Table of Contents */}
+                    {toc.length > 0 && (
+                        <nav className="mb-8 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Table of Contents</h3>
+                            <ul className="space-y-2">
+                                {toc.map((item, idx) => (
+                                    <li key={idx} className={`${item.level === 1 ? 'ml-0' : item.level === 2 ? 'ml-4' : 'ml-8'}`}>
+                                        <a 
+                                            href={`#${item.id}`} 
+                                            className="text-primary-600 hover:text-primary-700 transition-colors"
+                                        >
+                                            {item.text}
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        </nav>
+                    )}
 
-                <article ref={articleRef}>
-                    <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeHighlight]}
-                        components={{
-                            h1: ({ node, ...props }) => {
-                                const text = props.children[0];
-                                const id = typeof text === 'string' ? text.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
-                                return <h1 id={id} {...props} />;
-                            },
-                            h2: ({ node, ...props }) => {
-                                const text = props.children[0];
-                                const id = typeof text === 'string' ? text.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
-                                return <h2 id={id} {...props} />;
-                            },
-                            h3: ({ node, ...props }) => {
-                                const text = props.children[0];
-                                const id = typeof text === 'string' ? text.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
-                                return <h3 id={id} {...props} />;
-                            },
-                            img: ({ node, ...props }) => {
-                                // Fix image URLs to point to backend
-                                let src = props.src || '';
-                                if (src && src.startsWith('/images/')) {
-                                    // Get backend URL from env
-                                    const backendUrl = typeof window !== 'undefined'
-                                        ? (window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000')
-                                        : 'http://localhost:8000';
-                                    // Convert Docker service name to localhost if needed
-                                    const baseUrl = backendUrl.includes('_') || (!backendUrl.includes('.') && !backendUrl.startsWith('http://localhost') && !backendUrl.startsWith('https://'))
-                                        ? `http://localhost:${backendUrl.match(/:(\d+)/)?.[1] || '8000'}`
-                                        : backendUrl;
-                                    src = `${baseUrl}${src}`;
+                    {/* Article Content */}
+                    <article ref={articleRef} className="prose prose-lg max-w-none bg-white rounded-xl p-8 md:p-12 shadow-sm border border-gray-200 mb-8">
+                        <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeHighlight]}
+                            components={{
+                                h1: ({ node, ...props }) => {
+                                    const text = props.children[0];
+                                    const id = typeof text === 'string' ? text.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
+                                    return <h1 id={id} className="text-4xl font-bold mb-6 mt-8 text-gray-900" {...props} />;
+                                },
+                                h2: ({ node, ...props }) => {
+                                    const text = props.children[0];
+                                    const id = typeof text === 'string' ? text.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
+                                    return <h2 id={id} className="text-3xl font-semibold mb-4 mt-6 text-gray-900" {...props} />;
+                                },
+                                h3: ({ node, ...props }) => {
+                                    const text = props.children[0];
+                                    const id = typeof text === 'string' ? text.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
+                                    return <h3 id={id} className="text-2xl font-semibold mb-3 mt-5 text-gray-900" {...props} />;
+                                },
+                                img: ({ node, ...props }) => {
+                                    // Fix image URLs to point to backend
+                                    let src = props.src || '';
+                                    if (src && src.startsWith('/images/')) {
+                                        // Get backend URL from env
+                                        const backendUrl = typeof window !== 'undefined'
+                                            ? (window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000')
+                                            : 'http://localhost:8000';
+                                        // Convert Docker service name to localhost if needed
+                                        const baseUrl = backendUrl.includes('_') || (!backendUrl.includes('.') && !backendUrl.startsWith('http://localhost') && !backendUrl.startsWith('https://'))
+                                            ? `http://localhost:${backendUrl.match(/:(\d+)/)?.[1] || '8000'}`
+                                            : backendUrl;
+                                        src = `${baseUrl}${src}`;
+                                    }
+                                    return (
+                                        <img
+                                            {...props}
+                                            src={src}
+                                            className="max-w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                            onClick={() => setSelectedImage(src)}
+                                        />
+                                    );
                                 }
-                                return (
-                                    <img
-                                        {...props}
-                                        src={src}
-                                        style={{ maxWidth: '100%', cursor: 'pointer' }}
-                                        onClick={() => setSelectedImage(src)}
-                                    />
-                                );
-                            }
-                        }}
-                    >
-                        {blog.content}
-                    </ReactMarkdown>
-                </article>
+                            }}
+                        >
+                            {blog.content}
+                        </ReactMarkdown>
+                    </article>
 
-                <ReactionButtons blogSlug={slug} />
-                <CommentSection blogSlug={slug} />
+                    <ReactionButtons blogSlug={slug} />
+                    <CommentSection blogSlug={slug} />
+                </div>
             </main>
 
+            {/* Image Modal */}
             {selectedImage && (
                 <div
-                    style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'rgba(0,0,0,0.9)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 1000,
-                        cursor: 'pointer'
-                    }}
+                    className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 cursor-pointer"
                     onClick={() => setSelectedImage(null)}
                 >
                     <img
                         src={selectedImage}
                         alt="Fullscreen"
-                        style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain' }}
+                        className="max-w-[90%] max-h-[90%] object-contain"
                         onClick={(e) => e.stopPropagation()}
                     />
                     <button
                         onClick={() => setSelectedImage(null)}
-                        style={{
-                            position: 'absolute',
-                            top: '20px',
-                            right: '20px',
-                            background: 'white',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: '40px',
-                            height: '40px',
-                            fontSize: '24px',
-                            cursor: 'pointer'
-                        }}
+                        className="absolute top-6 right-6 w-10 h-10 bg-white rounded-full flex items-center justify-center text-2xl font-bold hover:bg-gray-100 transition-colors"
                     >
                         ×
                     </button>

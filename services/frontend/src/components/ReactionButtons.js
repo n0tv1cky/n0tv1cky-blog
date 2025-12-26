@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 // Helper to get base URL - convert Docker service names to localhost for client-side
 function getBaseUrl() {
@@ -21,7 +22,6 @@ export default function ReactionButtons({ blogSlug }) {
     const [userReaction, setUserReaction] = useState(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState(null);
 
     useEffect(() => {
         loadReactions();
@@ -46,7 +46,6 @@ export default function ReactionButtons({ blogSlug }) {
         if (submitting) return;
 
         setSubmitting(true);
-        setError(null);
 
         try {
             const url = BASE ? `${BASE}/api/blogs/${blogSlug}/react?reaction_type=${type}` : `/api/blogs/${blogSlug}/react?reaction_type=${type}`;
@@ -55,14 +54,13 @@ export default function ReactionButtons({ blogSlug }) {
             });
 
             if (res.status === 429) {
-                setError('Rate limit exceeded. Please try again later.');
+                toast.error('Rate limit exceeded. Please try again later.');
                 setSubmitting(false);
                 return;
             }
 
             if (!res.ok) {
-                const text = await res.text();
-                setError(text || 'Failed to submit reaction');
+                toast.error('Failed to submit reaction');
                 setSubmitting(false);
                 return;
             }
@@ -72,47 +70,42 @@ export default function ReactionButtons({ blogSlug }) {
             // Update user reaction state
             if (result.reaction_type === null) {
                 setUserReaction(null);
+                toast.success('Reaction removed');
             } else {
                 setUserReaction(result.reaction_type);
+                toast.success(`Reaction ${result.reaction_type === 'like' ? 'liked' : 'disliked'}!`);
             }
 
             // Reload reactions to get updated counts
             await loadReactions();
         } catch (e) {
-            setError('Network error. Please try again.');
+            toast.error('Network error. Please try again.');
         } finally {
             setSubmitting(false);
         }
     }
 
     if (loading) {
-        return <div style={{ padding: '0.5rem' }}>Loading reactions...</div>;
+        return (
+            <div className="py-4 border-y border-gray-200">
+                <div className="animate-pulse flex gap-4">
+                    <div className="h-10 w-24 bg-gray-200 rounded-lg"></div>
+                    <div className="h-10 w-24 bg-gray-200 rounded-lg"></div>
+                </div>
+            </div>
+        );
     }
 
     return (
-        <div style={{ padding: '1rem', marginBottom: '1rem', borderTop: '1px solid #e0e0e0', borderBottom: '1px solid #e0e0e0' }}>
-            {error && (
-                <div style={{ color: 'red', marginBottom: '0.5rem', padding: '0.5rem', background: '#ffe6e6', borderRadius: '4px', fontSize: '0.875rem' }}>
-                    {error}
-                </div>
-            )}
-
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div className="py-6 border-y border-gray-200">
+            <div className="flex gap-3">
                 <button
                     onClick={() => handleReaction('like')}
                     disabled={submitting}
-                    style={{
-                        padding: '0.5rem 1rem',
-                        background: userReaction === 'like' ? '#4CAF50' : '#f0f0f0',
-                        color: userReaction === 'like' ? 'white' : '#333',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px',
-                        cursor: submitting ? 'not-allowed' : 'pointer',
-                        fontWeight: 'bold',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                    }}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${userReaction === 'like'
+                            ? 'bg-green-500 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        } ${submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                     <span>👍</span>
                     <span>Like ({reactions.likes})</span>
@@ -121,18 +114,10 @@ export default function ReactionButtons({ blogSlug }) {
                 <button
                     onClick={() => handleReaction('dislike')}
                     disabled={submitting}
-                    style={{
-                        padding: '0.5rem 1rem',
-                        background: userReaction === 'dislike' ? '#f44336' : '#f0f0f0',
-                        color: userReaction === 'dislike' ? 'white' : '#333',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px',
-                        cursor: submitting ? 'not-allowed' : 'pointer',
-                        fontWeight: 'bold',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                    }}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${userReaction === 'dislike'
+                            ? 'bg-red-500 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        } ${submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                     <span>👎</span>
                     <span>Dislike ({reactions.dislikes})</span>

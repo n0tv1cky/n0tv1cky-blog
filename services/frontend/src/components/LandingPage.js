@@ -26,61 +26,57 @@ export default function LandingPage() {
     }, []);
 
     return (
-        <main style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                <h1>Welcome to n0tv1cky Blog</h1>
-                <p style={{ fontSize: '18px', color: '#666' }}>A modern, minimal blog platform for markdown publishing.</p>
-                <div style={{ marginTop: '2rem' }}>
+        <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+            <div className="max-w-4xl mx-auto px-6 py-16">
+                {/* Hero Section */}
+                <div className="text-center mb-16">
+                    <h1 className="text-5xl font-bold text-gray-900 mb-4 font-serif">
+                        Welcome to n0tv1cky Blog
+                    </h1>
+                    <p className="text-xl text-gray-600 mb-8">
+                        A modern, minimal blog platform for markdown publishing.
+                    </p>
                     <Link href="/blogs">
-                        <button style={{
-                            padding: '12px 24px',
-                            fontSize: '16px',
-                            backgroundColor: '#0070f3',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer'
-                        }}>
+                        <button className="px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors duration-200 shadow-sm hover:shadow-md">
                             View All Blogs
                         </button>
                     </Link>
                 </div>
-            </div>
 
-            {loading ? (
-                <div style={{ textAlign: 'center', padding: '2rem' }}>Loading...</div>
-            ) : aboutContent ? (
-                <section style={{
-                    marginTop: '3rem',
-                    padding: '2rem',
-                    backgroundColor: '#f9f9f9',
-                    borderRadius: '8px',
-                    border: '1px solid #e0e0e0'
-                }}>
-                    <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeHighlight]}
-                        components={{
-                            img: ({ node, ...props }) => {
-                                // Fix image URLs to point to backend
-                                let src = props.src || '';
-                                if (src && src.startsWith('/images/')) {
-                                    const backendUrl = typeof window !== 'undefined'
-                                        ? (window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000')
-                                        : 'http://localhost:8000';
-                                    const baseUrl = backendUrl.includes('_') || (!backendUrl.includes('.') && !backendUrl.startsWith('http://localhost') && !backendUrl.startsWith('https://'))
-                                        ? `http://localhost:${backendUrl.match(/:(\d+)/)?.[1] || '8000'}`
-                                        : backendUrl;
-                                    src = `${baseUrl}${src}`;
-                                }
-                                return <img {...props} src={src} style={{ maxWidth: '100%' }} />;
-                            }
-                        }}
-                    >
-                        {aboutContent}
-                    </ReactMarkdown>
-                </section>
-            ) : null}
+                {/* About Section */}
+                {loading ? (
+                    <div className="text-center py-12">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                    </div>
+                ) : aboutContent ? (
+                    <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 md:p-12">
+                        <div className="prose prose-lg max-w-none">
+                            <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                rehypePlugins={[rehypeHighlight]}
+                                components={{
+                                    img: ({ node, ...props }) => {
+                                        // Fix image URLs to point to backend
+                                        let src = props.src || '';
+                                        if (src && src.startsWith('/images/')) {
+                                            const backendUrl = typeof window !== 'undefined'
+                                                ? (window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000')
+                                                : 'http://localhost:8000';
+                                            const baseUrl = backendUrl.includes('_') || (!backendUrl.includes('.') && !backendUrl.startsWith('http://localhost') && !backendUrl.startsWith('https://'))
+                                                ? `http://localhost:${backendUrl.match(/:(\d+)/)?.[1] || '8000'}`
+                                                : backendUrl;
+                                            src = `${baseUrl}${src}`;
+                                        }
+                                        return <img {...props} src={src} className="max-w-full rounded-lg" />;
+                                    }
+                                }}
+                            >
+                                {aboutContent}
+                            </ReactMarkdown>
+                        </div>
+                    </section>
+                ) : null}
+            </div>
         </main>
     );
 }

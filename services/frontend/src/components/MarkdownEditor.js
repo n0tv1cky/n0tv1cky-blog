@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import toast from 'react-hot-toast';
 import 'highlight.js/styles/github.css';
 
 export default function MarkdownEditor({ mode, slug }) {
@@ -88,184 +89,236 @@ export default function MarkdownEditor({ mode, slug }) {
         try {
             if (mode === 'new') {
                 await createBlog(payload, adminPassword);
+                toast.success('Blog created successfully!');
             } else {
                 await updateBlog(slug, payload, adminPassword);
+                toast.success('Blog updated successfully!');
             }
             router.push('/admin');
         } catch (e) {
-            setError(e.message || 'Save failed');
+            const errorMsg = e.message || 'Save failed';
+            setError(errorMsg);
+            toast.error(errorMsg);
         } finally {
             setLoading(false);
         }
     }
 
     return (
-        <main style={{ padding: 16 }}>
-            <h1>{mode === 'new' ? 'New Blog' : `Edit: ${slug}`}</h1>
+        <main className="min-h-screen bg-gray-50">
+            <div className="max-w-7xl mx-auto px-6 py-12">
+                <div className="mb-8">
+                    <h1 className="text-4xl font-bold text-gray-900 font-serif mb-2">
+                        {mode === 'new' ? 'New Blog' : `Edit: ${slug}`}
+                    </h1>
+                    <p className="text-gray-600">Create or edit your blog post</p>
+                </div>
 
-            <div style={{ marginBottom: 8 }}>
-                <label>Title</label>
-                <input value={title} onChange={e => setTitle(e.target.value)} style={{ width: '100%' }} />
-            </div>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 space-y-6">
+                    {/* Basic Info */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Title <span className="text-red-500">*</span>
+                            </label>
+                            <input 
+                                value={title} 
+                                onChange={e => setTitle(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                                placeholder="Enter blog title"
+                            />
+                        </div>
 
-            <div style={{ marginBottom: 8 }}>
-                <label>Slug</label>
-                <input value={blogSlug} onChange={e => setBlogSlug(e.target.value)} style={{ width: '100%' }} />
-            </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Slug <span className="text-red-500">*</span>
+                            </label>
+                            <input 
+                                value={blogSlug} 
+                                onChange={e => setBlogSlug(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all font-mono text-sm"
+                                placeholder="blog-slug"
+                            />
+                        </div>
+                    </div>
 
-            <div style={{ marginBottom: 8 }}>
-                <label>Description</label>
-                <input value={description} onChange={e => setDescription(e.target.value)} style={{ width: '100%' }} />
-            </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Description
+                        </label>
+                        <input 
+                            value={description} 
+                            onChange={e => setDescription(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                            placeholder="Brief description of the blog"
+                        />
+                    </div>
 
-            <div style={{ marginBottom: 8 }}>
-                <DraftAutosave
-                    enabled={true}
-                    title={title}
-                    slug={blogSlug}
-                    description={description}
-                    content={content}
-                    onSave={(draft) => {
-                        // Save to localStorage
-                        if (typeof window !== 'undefined') {
-                            const key = mode === 'new' ? 'draft_new' : `draft_${slug}`;
-                            localStorage.setItem(key, JSON.stringify(draft));
-                        }
-                    }}
-                />
-            </div>
+                    <DraftAutosave
+                        enabled={true}
+                        title={title}
+                        slug={blogSlug}
+                        description={description}
+                        content={content}
+                        onSave={(draft) => {
+                            // Save to localStorage
+                            if (typeof window !== 'undefined') {
+                                const key = mode === 'new' ? 'draft_new' : `draft_${slug}`;
+                                localStorage.setItem(key, JSON.stringify(draft));
+                            }
+                        }}
+                    />
 
-            <div style={{ marginBottom: 8 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                    <label>Content (Markdown)</label>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                        <button
-                            type="button"
-                            onClick={() => setViewMode('edit')}
-                            style={{
-                                padding: '4px 12px',
-                                fontSize: '14px',
-                                backgroundColor: viewMode === 'edit' ? '#0070f3' : '#f0f0f0',
-                                color: viewMode === 'edit' ? 'white' : 'black',
-                                border: '1px solid #ccc',
-                                borderRadius: '4px 0 0 4px',
-                                cursor: 'pointer'
-                            }}
+                    {/* Markdown Editor */}
+                    <div>
+                        <div className="flex justify-between items-center mb-3">
+                            <label className="block text-sm font-medium text-gray-700">
+                                Content (Markdown)
+                            </label>
+                            <div className="flex gap-0 border border-gray-300 rounded-lg overflow-hidden">
+                                <button
+                                    type="button"
+                                    onClick={() => setViewMode('edit')}
+                                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                                        viewMode === 'edit'
+                                            ? 'bg-primary-600 text-white'
+                                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                    }`}
+                                >
+                                    Edit
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setViewMode('split')}
+                                    className={`px-4 py-2 text-sm font-medium transition-colors border-x border-gray-300 ${
+                                        viewMode === 'split'
+                                            ? 'bg-primary-600 text-white'
+                                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                    }`}
+                                >
+                                    Split
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setViewMode('preview')}
+                                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                                        viewMode === 'preview'
+                                            ? 'bg-primary-600 text-white'
+                                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                    }`}
+                                >
+                                    Preview
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex gap-4 min-h-[500px]">
+                            {(viewMode === 'edit' || viewMode === 'split') && (
+                                <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'}`}>
+                                    <textarea
+                                        value={content}
+                                        onChange={e => setContent(e.target.value)}
+                                        className="w-full h-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all font-mono text-sm resize-none"
+                                        placeholder="Write your markdown content here..."
+                                    />
+                                </div>
+                            )}
+                            {(viewMode === 'preview' || viewMode === 'split') && (
+                                <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'} border border-gray-300 rounded-lg p-6 bg-white overflow-auto`}>
+                                    <div className="prose max-w-none">
+                                        <ReactMarkdown
+                                            remarkPlugins={[remarkGfm]}
+                                            rehypePlugins={[rehypeHighlight]}
+                                            components={{
+                                                img: ({ node, ...props }) => {
+                                                    // Fix image URLs to point to backend
+                                                    let src = props.src || '';
+                                                    if (src && src.startsWith('/images/')) {
+                                                        const backendUrl = typeof window !== 'undefined'
+                                                            ? (window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000')
+                                                            : 'http://localhost:8000';
+                                                        const baseUrl = backendUrl.includes('_') || (!backendUrl.includes('.') && !backendUrl.startsWith('http://localhost') && !backendUrl.startsWith('https://'))
+                                                            ? `http://localhost:${backendUrl.match(/:(\d+)/)?.[1] || '8000'}`
+                                                            : backendUrl;
+                                                        src = `${baseUrl}${src}`;
+                                                    }
+                                                    return <img {...props} src={src} className="max-w-full rounded-lg" />;
+                                                }
+                                            }}
+                                        >
+                                            {content || '*No content yet*'}
+                                        </ReactMarkdown>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Options */}
+                    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                checked={published} 
+                                onChange={e => setPublished(e.target.checked)}
+                                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                            />
+                            <span className="text-sm font-medium text-gray-700">Published</span>
+                        </label>
+                    </div>
+
+                    {/* Admin Password */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Admin Password <span className="text-red-500">*</span>
+                        </label>
+                        <input 
+                            value={adminPassword} 
+                            onChange={e => setAdminPassword(e.target.value)}
+                            type="password"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                            placeholder="Enter admin password"
+                        />
+                    </div>
+
+                    {/* Image Upload */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Upload Image
+                        </label>
+                        <ImageUploader 
+                            adminPassword={adminPassword} 
+                            blogSlug={blogSlug} 
+                            onUpload={(url) => setContent(c => c + `\n\n![Image](${url})\n`)} 
+                        />
+                    </div>
+
+                    {error && (
+                        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                            {error}
+                        </div>
+                    )}
+
+                    {/* Save Button */}
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                        <button 
+                            onClick={() => router.push('/admin')}
+                            className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
                         >
-                            Edit
+                            Cancel
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => setViewMode('split')}
-                            style={{
-                                padding: '4px 12px',
-                                fontSize: '14px',
-                                backgroundColor: viewMode === 'split' ? '#0070f3' : '#f0f0f0',
-                                color: viewMode === 'split' ? 'white' : 'black',
-                                border: '1px solid #ccc',
-                                borderLeft: 'none',
-                                borderRight: 'none',
-                                borderRadius: '0',
-                                cursor: 'pointer'
-                            }}
+                        <button 
+                            onClick={handleSave} 
+                            disabled={loading}
+                            className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${
+                                loading
+                                    ? 'bg-gray-400 cursor-not-allowed'
+                                    : 'bg-primary-600 hover:bg-primary-700 shadow-sm hover:shadow-md'
+                            } text-white`}
                         >
-                            Split
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setViewMode('preview')}
-                            style={{
-                                padding: '4px 12px',
-                                fontSize: '14px',
-                                backgroundColor: viewMode === 'preview' ? '#0070f3' : '#f0f0f0',
-                                color: viewMode === 'preview' ? 'white' : 'black',
-                                border: '1px solid #ccc',
-                                borderRadius: '0 4px 4px 0',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Preview
+                            {loading ? 'Saving...' : 'Save Blog'}
                         </button>
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: '8px', minHeight: '400px' }}>
-                    {(viewMode === 'edit' || viewMode === 'split') && (
-                        <div style={{ flex: viewMode === 'split' ? 1 : 'none', width: viewMode === 'split' ? '50%' : '100%' }}>
-                            <textarea
-                                value={content}
-                                onChange={e => setContent(e.target.value)}
-                                rows={viewMode === 'split' ? 20 : 12}
-                                style={{
-                                    width: '100%',
-                                    height: viewMode === 'split' ? '100%' : 'auto',
-                                    fontFamily: 'monospace',
-                                    fontSize: '14px',
-                                    padding: '8px',
-                                    border: '1px solid #ccc',
-                                    borderRadius: '4px',
-                                    resize: 'none'
-                                }}
-                            />
-                        </div>
-                    )}
-                    {(viewMode === 'preview' || viewMode === 'split') && (
-                        <div style={{
-                            flex: viewMode === 'split' ? 1 : 'none',
-                            width: viewMode === 'split' ? '50%' : '100%',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px',
-                            padding: '12px',
-                            minHeight: viewMode === 'split' ? '100%' : '300px',
-                            backgroundColor: '#fff',
-                            overflow: 'auto'
-                        }}>
-                            <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                rehypePlugins={[rehypeHighlight]}
-                                components={{
-                                    img: ({ node, ...props }) => {
-                                        // Fix image URLs to point to backend
-                                        let src = props.src || '';
-                                        if (src && src.startsWith('/images/')) {
-                                            const backendUrl = typeof window !== 'undefined'
-                                                ? (window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000')
-                                                : 'http://localhost:8000';
-                                            const baseUrl = backendUrl.includes('_') || (!backendUrl.includes('.') && !backendUrl.startsWith('http://localhost') && !backendUrl.startsWith('https://'))
-                                                ? `http://localhost:${backendUrl.match(/:(\d+)/)?.[1] || '8000'}`
-                                                : backendUrl;
-                                            src = `${baseUrl}${src}`;
-                                        }
-                                        return <img {...props} src={src} style={{ maxWidth: '100%' }} />;
-                                    }
-                                }}
-                            >
-                                {content || '*No content yet*'}
-                            </ReactMarkdown>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            <div style={{ marginBottom: 8 }}>
-                <label>
-                    <input type="checkbox" checked={published} onChange={e => setPublished(e.target.checked)} /> Published
-                </label>
-            </div>
-
-            <div style={{ marginBottom: 8 }}>
-                <label>Admin Password</label>
-                <input value={adminPassword} onChange={e => setAdminPassword(e.target.value)} style={{ width: '100%' }} type="password" />
-            </div>
-
-            <div style={{ marginBottom: 8 }}>
-                <label>Upload Image</label>
-                <ImageUploader adminPassword={adminPassword} blogSlug={blogSlug} onUpload={(url) => setContent(c => c + `\n\n![Image](${url})\n`)} />
-            </div>
-
-            {error && <div style={{ color: 'red' }}>{error}</div>}
-
-            <div>
-                <button onClick={handleSave} disabled={loading}>{loading ? 'Saving...' : 'Save'}</button>
             </div>
         </main>
     );

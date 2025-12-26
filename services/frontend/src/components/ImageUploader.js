@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState } from 'react';
 import { uploadImage } from '../lib/api';
+import toast from 'react-hot-toast';
 
 export default function ImageUploader({ adminPassword, blogSlug, onUpload }) {
     const inputRef = useRef(null);
@@ -83,24 +84,62 @@ export default function ImageUploader({ adminPassword, blogSlug, onUpload }) {
         const f = e.target.files[0];
         if (!f) return;
         if (f.size > maxSize) {
-            alert(`File is too large. Max size is ${maxSize} bytes`);
+            toast.error(`File is too large. Max size is ${(maxSize / 1024 / 1024).toFixed(1)}MB`);
             return;
         }
         try {
             const res = await handleXHRUpload(f);
-            if (res && res.url) onUpload(res.url);
+            if (res && res.url) {
+                onUpload(res.url);
+                toast.success('Image uploaded successfully!');
+            }
         } catch (err) {
             console.error(err);
-            alert('Upload failed: ' + err.message);
+            toast.error('Upload failed: ' + err.message);
         } finally {
             setProgress(0);
+            // Reset input
+            if (inputRef.current) inputRef.current.value = '';
         }
     }
 
     return (
-        <div>
-            <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} />
-            {progress > 0 && <div>Uploading: {progress}%</div>}
+        <div className="space-y-3">
+            <label className="block">
+                <div className="flex items-center gap-3">
+                    <input 
+                        ref={inputRef} 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleFile}
+                        className="hidden"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => inputRef.current?.click()}
+                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors border border-gray-300"
+                    >
+                        Choose Image
+                    </button>
+                    <span className="text-sm text-gray-500">
+                        Max size: {(maxSize / 1024 / 1024).toFixed(1)}MB
+                    </span>
+                </div>
+            </label>
+            {progress > 0 && (
+                <div className="space-y-2">
+                    <div className="flex justify-between text-sm text-gray-600">
+                        <span>Uploading...</span>
+                        <span>{progress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                            className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${progress}%` }}
+                        ></div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
