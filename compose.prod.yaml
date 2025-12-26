@@ -20,8 +20,8 @@ services:
     container_name: ${BACKEND_CONTAINER_NAME}
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     volumes:
-      - ./services/backend/app:/app/app:ro
-      - ./blogs:/app/blogs:ro
+      - ./services/backend/app:/app/app
+      - ./blogs:/app/blogs
     env_file:
       - .env.prod
     environment:

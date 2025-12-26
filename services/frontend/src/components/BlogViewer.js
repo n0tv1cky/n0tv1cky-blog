@@ -4,6 +4,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { fetchBlog } from '../lib/api';
+import CommentSection from './CommentSection';
+import ReactionButtons from './ReactionButtons';
 import 'highlight.js/styles/github.css';
 
 export default function BlogViewer({ slug }) {
@@ -132,6 +134,9 @@ export default function BlogViewer({ slug }) {
                         {blog.content}
                     </ReactMarkdown>
                 </article>
+
+                <ReactionButtons blogSlug={slug} />
+                <CommentSection blogSlug={slug} />
             </main>
 
             {selectedImage && (

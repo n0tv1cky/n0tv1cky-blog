@@ -8,3 +8,4 @@ python-multipart
 PyYAML
 httpx
 python-jose[cryptography]
+pytz

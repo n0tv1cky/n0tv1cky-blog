@@ -3,9 +3,13 @@ from app.database import SessionLocal
 from app.models import Comment, Blog
 from app.schemas import CommentCreate, CommentOut
 from app.ratelimit import rate_limiter, get_client_id
-from datetime import datetime
+from app.utils import get_ist_now, ist_to_iso
+from app.auth_helpers import require_admin
 from typing import List
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -58,14 +62,15 @@ async def create_comment(slug: str, comment: CommentCreate, request: Request):
 		user_id = get_client_id(request)
 		
 		# Create comment
+		now = get_ist_now()
 		new_comment = Comment(
 			id=uuid.uuid4(),
 			blog_slug=slug,
 			author_name=comment.author_name[:100],
 			author_email=comment.author_email[:255] if comment.author_email else None,
 			content=comment.content.strip(),
-			created_at=datetime.utcnow(),
-			updated_at=datetime.utcnow()
+			created_at=now,
+			updated_at=now
 		)
 		db.add(new_comment)
 		db.commit()
@@ -87,7 +92,6 @@ async def create_comment(slug: str, comment: CommentCreate, request: Request):
 @router.delete("/comments/{comment_id}")
 async def delete_comment(comment_id: str, x_admin_password: str = Header(None), authorization: str = Header(None)):
 	"""Delete a comment (admin only)"""
-	from app.routes.admin import require_admin
 	require_admin(x_admin_password, authorization)
 	
 	db = SessionLocal()

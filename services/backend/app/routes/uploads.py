@@ -1,35 +1,18 @@
 from fastapi import APIRouter, File, UploadFile, Header, HTTPException, Form
 import os
 from pathlib import Path
-from app.auth import verify_token
 from app.ratelimit import rate_limiter
 from app.utils import get_ist_now
+from app.auth_helpers import require_admin
 
 router = APIRouter()
 
 UPLOAD_DIR = './blogs/images'
 Path(UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
 
-ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
-ADMIN_TOKEN = os.getenv('ADMIN_TOKEN')
-
 # max size in bytes (5MB)
-MAX_UPLOAD_SIZE = int(os.getenv('MAX_UPLOAD_SIZE', 5 * 1024 * 1024))
-
-
-def require_admin(password: str = None, authorization: str = None):
-	# Accept either X-ADMIN-PASSWORD or Authorization: Bearer <token>
-	if password and password == ADMIN_PASSWORD:
-		return
-	if authorization and authorization.startswith('Bearer '):
-		token = authorization.split(' ', 1)[1].strip()
-		if ADMIN_TOKEN and token == ADMIN_TOKEN:
-			return
-		# verify JWT
-		payload = verify_token(token)
-		if payload:
-			return
-	raise HTTPException(status_code=403, detail='Invalid admin credentials')
+from app.utils import DEFAULT_MAX_UPLOAD_SIZE
+MAX_UPLOAD_SIZE = int(os.getenv('MAX_UPLOAD_SIZE', DEFAULT_MAX_UPLOAD_SIZE))
 
 
 @router.post('/image')

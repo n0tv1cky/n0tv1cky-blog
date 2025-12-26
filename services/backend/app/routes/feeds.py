@@ -3,8 +3,12 @@ from fastapi.responses import Response
 import glob
 import os
 from app.markdown_parser import parse_markdown_file
-from datetime import datetime
+from app.utils import get_ist_now
 import xml.etree.ElementTree as ET
+import logging
+import pytz
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -43,7 +47,9 @@ async def rss_feed():
 	ET.SubElement(channel, 'link').text = base_url
 	ET.SubElement(channel, 'description').text = os.getenv('BLOG_DESCRIPTION', 'Blog Feed')
 	ET.SubElement(channel, 'language').text = 'en-us'
-	ET.SubElement(channel, 'lastBuildDate').text = datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
+	# RSS dates should be in GMT/UTC
+	now_utc = get_ist_now().astimezone(pytz.utc)
+	ET.SubElement(channel, 'lastBuildDate').text = now_utc.strftime('%a, %d %b %Y %H:%M:%S GMT')
 	
 	for blog in blogs[:20]:  # Limit to 20 most recent
 		item = ET.SubElement(channel, 'item')
@@ -55,13 +61,21 @@ async def rss_feed():
 		published_at = blog.get('published_at')
 		if published_at:
 			try:
+				from datetime import datetime
 				if isinstance(published_at, str):
 					dt = datetime.fromisoformat(published_at.replace('Z', '+00:00'))
+					if dt.tzinfo is None:
+						dt = pytz.utc.localize(dt)
 				else:
 					dt = published_at
-				ET.SubElement(item, 'pubDate').text = dt.strftime('%a, %d %b %Y %H:%M:%S GMT')
-			except:
-				pass
+				# Convert to UTC for RSS
+				if dt.tzinfo:
+					dt_utc = dt.astimezone(pytz.utc)
+				else:
+					dt_utc = pytz.utc.localize(dt)
+				ET.SubElement(item, 'pubDate').text = dt_utc.strftime('%a, %d %b %Y %H:%M:%S GMT')
+			except Exception as e:
+				logger.warning(f"Failed to parse published_at for blog {blog.get('slug')}: {e}")
 	
 	xml_str = ET.tostring(rss, encoding='utf-8', method='xml')
 	return Response(content=xml_str, media_type='application/rss+xml')
@@ -81,14 +95,15 @@ async def sitemap():
 	# Homepage
 	url = ET.SubElement(urlset, 'url')
 	ET.SubElement(url, 'loc').text = base_url
-	ET.SubElement(url, 'lastmod').text = datetime.utcnow().strftime('%Y-%m-%d')
+	now_utc = get_ist_now().astimezone(pytz.utc)
+	ET.SubElement(url, 'lastmod').text = now_utc.strftime('%Y-%m-%d')
 	ET.SubElement(url, 'changefreq').text = 'daily'
 	ET.SubElement(url, 'priority').text = '1.0'
 	
 	# Blog list
 	url = ET.SubElement(urlset, 'url')
 	ET.SubElement(url, 'loc').text = f"{base_url}/blogs"
-	ET.SubElement(url, 'lastmod').text = datetime.utcnow().strftime('%Y-%m-%d')
+	ET.SubElement(url, 'lastmod').text = now_utc.strftime('%Y-%m-%d')
 	ET.SubElement(url, 'changefreq').text = 'daily'
 	ET.SubElement(url, 'priority').text = '0.8'
 	
@@ -102,15 +117,25 @@ async def sitemap():
 		lastmod = updated_at or published_at
 		if lastmod:
 			try:
+				from datetime import datetime
 				if isinstance(lastmod, str):
 					dt = datetime.fromisoformat(lastmod.replace('Z', '+00:00'))
+					if dt.tzinfo is None:
+						dt = pytz.utc.localize(dt)
 				else:
 					dt = lastmod
-				ET.SubElement(url, 'lastmod').text = dt.strftime('%Y-%m-%d')
-			except:
-				ET.SubElement(url, 'lastmod').text = datetime.utcnow().strftime('%Y-%m-%d')
+				if dt.tzinfo:
+					dt_utc = dt.astimezone(pytz.utc)
+				else:
+					dt_utc = pytz.utc.localize(dt)
+				ET.SubElement(url, 'lastmod').text = dt_utc.strftime('%Y-%m-%d')
+			except Exception as e:
+				logger.warning(f"Failed to parse date for blog {blog.get('slug')}: {e}")
+				now_utc = get_ist_now().astimezone(pytz.utc)
+				ET.SubElement(url, 'lastmod').text = now_utc.strftime('%Y-%m-%d')
 		else:
-			ET.SubElement(url, 'lastmod').text = datetime.utcnow().strftime('%Y-%m-%d')
+			now_utc = get_ist_now().astimezone(pytz.utc)
+			ET.SubElement(url, 'lastmod').text = now_utc.strftime('%Y-%m-%d')
 		
 		ET.SubElement(url, 'changefreq').text = 'weekly'
 		ET.SubElement(url, 'priority').text = '0.6'

@@ -2,8 +2,11 @@ from fastapi import APIRouter, HTTPException, Request, Query
 from app.database import SessionLocal
 from app.models import Reaction, Blog, ReactionType
 from app.ratelimit import rate_limiter, get_client_id
-from datetime import datetime
+from app.utils import get_ist_now
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -33,7 +36,7 @@ async def get_reactions(slug: str):
 
 @router.post("/{slug}/react")
 @rate_limiter('react')
-async def add_reaction(slug: str, reaction_type: str = Query(..., description="Reaction type: 'like' or 'dislike'"), request: Request = None):
+async def add_reaction(slug: str, reaction_type: str = Query(..., description="Reaction type: 'like' or 'dislike'"), request: Request):
 	"""Add or update a reaction (rate limited: 10/hour per IP)"""
 	db = SessionLocal()
 	try:
@@ -68,7 +71,7 @@ async def add_reaction(slug: str, reaction_type: str = Query(..., description="R
 			else:
 				# Different reaction - update it
 				existing.reaction_type = reaction_enum
-				existing.created_at = datetime.utcnow()
+				existing.created_at = get_ist_now()
 				db.commit()
 				return {
 					'blog_slug': slug,
@@ -82,7 +85,7 @@ async def add_reaction(slug: str, reaction_type: str = Query(..., description="R
 				blog_slug=slug,
 				user_identifier=user_id,
 				reaction_type=reaction_enum,
-				created_at=datetime.utcnow()
+				created_at=get_ist_now()
 			)
 			db.add(new_reaction)
 			db.commit()
