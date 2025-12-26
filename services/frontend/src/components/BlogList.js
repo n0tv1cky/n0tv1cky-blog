@@ -1,3 +1,4 @@
+"use client";
 import { useEffect, useState } from 'react';
 import BlogCard from './BlogCard';
 import { fetchBlogs } from '../lib/api';
