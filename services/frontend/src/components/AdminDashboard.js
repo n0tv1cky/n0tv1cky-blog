@@ -12,6 +12,7 @@ export default function AdminDashboard() {
     const [mode, setMode] = useState('view'); // 'view' or 'edit'
     const [selectedBlogs, setSelectedBlogs] = useState(new Set());
     const [isDeleting, setIsDeleting] = useState(false);
+    const [invalidCreds, setInvalidCreds] = useState(false);
     const selectAllRef = useRef(null);
     const router = useRouter();
 
@@ -33,7 +34,13 @@ export default function AdminDashboard() {
                 setLoading(false);
                 // Check if it's a 403 error
                 if (error?.status === 403 || error?.message?.includes('403')) {
-                    toast.error('Invalid credentials. Please log in again.');
+                    setInvalidCreds(true);
+                    // Optionally, remove token to avoid future confusion:
+                    if (typeof window !== 'undefined') {
+                        localStorage.removeItem('admin_token');
+                    }
+                } else {
+                    toast.error('Error loading blogs');
                 }
             }
         });
@@ -139,6 +146,23 @@ export default function AdminDashboard() {
             selectAllRef.current.indeterminate = someSelected;
         }
     }, [someSelected]);
+
+    if (invalidCreds) {
+        // Show login page instead of dashboard
+        return (
+            <main className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 max-w-sm w-full text-center">
+                    <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-100">Session Expired</h2>
+                    <p className="text-gray-600 dark:text-gray-300 mb-6">Your admin session is invalid or expired. Please log in again.</p>
+                    <Link href="/admin/login">
+                        <button className="px-6 py-2.5 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors shadow-sm hover:shadow-md w-full">
+                            Log in
+                        </button>
+                    </Link>
+                </div>
+            </main>
+        );
+    }
 
     return (
         <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
