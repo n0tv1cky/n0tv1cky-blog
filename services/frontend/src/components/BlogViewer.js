@@ -15,6 +15,12 @@ export default function BlogViewer({ slug }) {
     const [toc, setToc] = useState([]);
     const [selectedImage, setSelectedImage] = useState(null);
     const articleRef = useRef(null);
+    const generateId = (text) => {
+        if (typeof text === 'string') {
+            return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        }
+        return '';
+    };
 
     useEffect(() => {
         let mounted = true;
@@ -31,7 +37,7 @@ export default function BlogViewer({ slug }) {
                             if (match) {
                                 const level = match[1].length;
                                 const text = match[2];
-                                const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                                const id = generateId(text); // Using the same function here
                                 headers.push({ level, text, id, line: index });
                             }
                         });
@@ -90,7 +96,7 @@ export default function BlogViewer({ slug }) {
             </div>
         );
     }
-    
+
     if (!blog) {
         return (
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -100,6 +106,7 @@ export default function BlogViewer({ slug }) {
             </div>
         );
     }
+
 
     return (
         <>
@@ -134,65 +141,61 @@ export default function BlogViewer({ slug }) {
                         </div>
                     </div>
 
-                    {/* Table of Contents */}
                     {toc.length > 0 && (
                         <nav className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Table of Contents</h3>
-                            <ul className="space-y-0.5 toc-tree">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                                </svg>
+                                Table of Contents
+                            </h3>
+                            <ul className="space-y-1">
                                 {toc.map((item, idx) => {
                                     const nextItem = idx < toc.length - 1 ? toc[idx + 1] : null;
                                     const isLastInLevel = !nextItem || nextItem.level <= item.level;
-                                    const hasChildren = nextItem && nextItem.level > item.level;
-                                    
-                                    // Calculate which parent levels need vertical lines
-                                    const parentLevels = [];
-                                    for (let i = item.level - 1; i >= 1; i--) {
-                                        // Check if there's a sibling at this level after this item
-                                        let hasSiblingAfter = false;
-                                        for (let j = idx + 1; j < toc.length; j++) {
-                                            if (toc[j].level === i) {
-                                                hasSiblingAfter = true;
-                                                break;
-                                            }
-                                            if (toc[j].level < i) break;
-                                        }
-                                        if (hasSiblingAfter) {
-                                            parentLevels.push(i);
-                                        }
-                                    }
-                                    
+
                                     return (
-                                        <li 
-                                            key={idx} 
-                                            className={`toc-item toc-level-${item.level} ${item.level > 1 ? 'has-parent' : ''} ${isLastInLevel ? 'last-in-level' : ''} ${hasChildren ? 'has-children' : ''}`}
+                                        <li
+                                            key={idx}
+                                            className="relative"
+                                            style={{
+                                                paddingLeft: item.level > 1 ? `${(item.level - 1) * 20}px` : '0px'
+                                            }}
                                         >
-                                            {/* Vertical lines for parent levels */}
-                                            {parentLevels.map(level => (
-                                                <div
-                                                    key={level}
-                                                    className="absolute top-0 bottom-0 w-px bg-gray-300 dark:bg-gray-600"
-                                                    style={{ left: `${(level - 1) * 24 + 12}px` }}
-                                                />
-                                            ))}
-                                            {/* Horizontal connector */}
+                                            {/* Connector line for nested items */}
                                             {item.level > 1 && (
-                                                <div 
-                                                    className="absolute left-0 top-2.5 w-4 h-px bg-gray-300 dark:bg-gray-600"
-                                                    style={{ left: `${(item.level - 2) * 24 + 12}px` }}
+                                                <div
+                                                    className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-gray-300 via-gray-300 to-transparent dark:from-gray-600 dark:via-gray-600"
+                                                    style={{
+                                                        left: `${(item.level - 2) * 20 + 8}px`,
+                                                        height: isLastInLevel ? '50%' : '100%'
+                                                    }}
                                                 />
                                             )}
-                                            <a 
-                                                href={`#${item.id}`} 
-                                                className={`relative block py-1.5 px-2 rounded-md transition-all text-sm ${
-                                                    item.level === 1 
-                                                        ? 'text-gray-900 dark:text-gray-100 font-medium hover:bg-gray-100 dark:hover:bg-gray-700' 
-                                                        : item.level === 2
-                                                        ? 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                            {item.level > 1 && (
+                                                <div
+                                                    className="absolute top-1/2 -translate-y-1/2 h-px bg-gray-300 dark:bg-gray-600"
+                                                    style={{
+                                                        left: `${(item.level - 2) * 20 + 8}px`,
+                                                        width: '8px'
+                                                    }}
+                                                />
+                                            )}
+
+                                            <a
+                                                href={`#${item.id}`}
+                                                className={`relative block py-2 px-3 rounded-lg transition-all group ${item.level === 1
+                                                    ? 'text-gray-900 dark:text-gray-100 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700/70'
+                                                    : item.level === 2
+                                                        ? 'text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                                         : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                                                }`}
-                                                style={{ paddingLeft: item.level > 1 ? `${(item.level - 1) * 24 + 8}px` : '8px' }}
+                                                    }`}
                                             >
-                                                {item.text}
+                                                {/* Indicator dot for nested items */}
+                                                {item.level > 1 && (
+                                                    <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500 group-hover:bg-primary-500 transition-colors" />
+                                                )}
+                                                <span className={item.level > 1 ? 'ml-3' : ''}>{item.text}</span>
                                             </a>
                                         </li>
                                     );
@@ -200,7 +203,6 @@ export default function BlogViewer({ slug }) {
                             </ul>
                         </nav>
                     )}
-
                     {/* Article Content */}
                     <article ref={articleRef} className="prose prose-lg max-w-none bg-white dark:bg-gray-800 rounded-xl p-8 md:p-12 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
                         <ReactMarkdown
@@ -208,18 +210,39 @@ export default function BlogViewer({ slug }) {
                             rehypePlugins={[rehypeHighlight]}
                             components={{
                                 h1: ({ node, ...props }) => {
-                                    const text = props.children[0];
-                                    const id = typeof text === 'string' ? text.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
+                                    const extractText = (children) => {
+                                        if (typeof children === 'string') return children;
+                                        if (Array.isArray(children)) return children.map(extractText).join('');
+                                        if (children?.props?.children) return extractText(children.props.children);
+                                        return '';
+                                    };
+
+                                    const text = extractText(props.children);
+                                    const id = generateId(text);
                                     return <h1 id={id} className="text-4xl font-bold mb-6 mt-8 text-gray-900 dark:text-gray-100" {...props} />;
                                 },
                                 h2: ({ node, ...props }) => {
-                                    const text = props.children[0];
-                                    const id = typeof text === 'string' ? text.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
+                                    const extractText = (children) => {
+                                        if (typeof children === 'string') return children;
+                                        if (Array.isArray(children)) return children.map(extractText).join('');
+                                        if (children?.props?.children) return extractText(children.props.children);
+                                        return '';
+                                    };
+
+                                    const text = extractText(props.children);
+                                    const id = generateId(text);
                                     return <h2 id={id} className="text-3xl font-semibold mb-4 mt-6 text-gray-900 dark:text-gray-100" {...props} />;
                                 },
                                 h3: ({ node, ...props }) => {
-                                    const text = props.children[0];
-                                    const id = typeof text === 'string' ? text.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
+                                    const extractText = (children) => {
+                                        if (typeof children === 'string') return children;
+                                        if (Array.isArray(children)) return children.map(extractText).join('');
+                                        if (children?.props?.children) return extractText(children.props.children);
+                                        return '';
+                                    };
+
+                                    const text = extractText(props.children);
+                                    const id = generateId(text);
                                     return <h3 id={id} className="text-2xl font-semibold mb-3 mt-5 text-gray-900 dark:text-gray-100" {...props} />;
                                 },
                                 img: ({ node, ...props }) => {
@@ -249,12 +272,12 @@ export default function BlogViewer({ slug }) {
                         >
                             {blog.content}
                         </ReactMarkdown>
-            </article>
+                    </article>
 
                     <ReactionButtons blogSlug={slug} />
                     <CommentSection blogSlug={slug} />
                 </div>
-        </main>
+            </main>
 
             {/* Image Modal */}
             {selectedImage && (

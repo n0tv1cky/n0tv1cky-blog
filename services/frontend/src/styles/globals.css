@@ -124,3 +124,24 @@
   }
 }
 
+/* These should be outside @layer components since they're global HTML element styles */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 2rem;
+}
+
+/* Anchor hover effects - can go in @layer components */
+@layer components {
+  .prose h1[id]:hover::before,
+  .prose h2[id]:hover::before,
+  .prose h3[id]:hover::before {
+    content: '#';
+    @apply absolute -left-6 text-gray-400 dark:text-gray-600 font-normal;
+  }
+  
+  .prose h1[id],
+  .prose h2[id],
+  .prose h3[id] {
+    @apply relative;
+  }
+}
