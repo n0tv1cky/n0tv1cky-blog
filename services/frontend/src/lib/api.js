@@ -93,6 +93,31 @@ export async function fetchBlog(slug) {
     return null;
 }
 
+export async function fetchBlogAdmin(slug) {
+    // Admin endpoint - can fetch published and draft blogs
+    const BASE = getBaseUrl();
+    const url = BASE ? `${BASE}/api/admin/blogs/${slug}` : `/api/admin/blogs/${slug}`;
+    try {
+        const res = await authFetch(url, {
+            method: 'GET'
+        });
+        if (res.status === 403) {
+            const error = new Error('Invalid credentials');
+            error.status = 403;
+            throw error;
+        }
+        if (!res.ok) {
+            return null;
+        }
+        return await res.json();
+    } catch (e) {
+        if (e.status === 403) {
+            throw e; // Re-throw 403 errors to be handled by component
+        }
+        return null;
+    }
+}
+
 export async function createBlog(payload, adminPassword) {
     const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/admin/blogs` : `/api/admin/blogs`;

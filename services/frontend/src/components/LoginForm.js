@@ -22,22 +22,22 @@ export default function LoginForm({ onSuccess }) {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-6">
             <div className="max-w-md w-full">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2 font-serif">Admin Login</h1>
-                    <p className="text-gray-600 mb-8">Enter your password to access the admin dashboard</p>
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 font-serif">Admin Login</h1>
+                    <p className="text-gray-600 dark:text-gray-400 mb-8">Enter your password to access the admin dashboard</p>
                     
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Admin Password
                             </label>
                             <input 
                                 type="password" 
                                 value={password} 
                                 onChange={e => setPassword(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                                className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                 placeholder="Enter password"
                                 required
                             />

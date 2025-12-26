@@ -259,6 +259,37 @@ async def list_all_blogs(x_admin_password: str = Header(None), authorization: st
 	return read_all_blogs(published_only=False)
 
 
+@router.get('/blogs/{slug}')
+async def get_blog_admin(slug: str, x_admin_password: str = Header(None), authorization: str = Header(None)):
+	"""Get a blog by slug for editing - admin only, returns published and draft blogs"""
+	require_admin(x_admin_password, authorization)
+	import glob
+	from app.markdown_parser import parse_markdown_file
+	
+	# First try exact filename match (e.g., about.md)
+	files = glob.glob(f"./blogs/{slug}.md")
+	if not files:
+		# Then try pattern with timestamp prefix (e.g., 20250101_120000_about.md)
+		files = glob.glob(f"./blogs/*_{slug}.md")
+	if not files:
+		# Finally try any file with slug inside
+		files = [p for p in glob.glob("./blogs/*.md") if f"_{slug}.md" in p]
+	if not files:
+		raise HTTPException(status_code=404, detail="Blog not found")
+	
+	front, content = parse_markdown_file(files[0])
+	front = front or {}
+	front['content'] = content
+	
+	# Convert datetime objects to ISO strings for JSON serialization
+	from datetime import datetime
+	for key in ['published_at', 'created_at', 'updated_at']:
+		if key in front and isinstance(front[key], datetime):
+			front[key] = front[key].isoformat()
+	
+	return front
+
+
 @router.get('/drafts')
 async def list_drafts(x_admin_password: str = Header(None), authorization: str = Header(None)):
 	require_admin(x_admin_password, authorization)

@@ -138,23 +138,65 @@ export default function BlogViewer({ slug }) {
                     {toc.length > 0 && (
                         <nav className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Table of Contents</h3>
-                            <ul className="space-y-1.5">
-                                {toc.map((item, idx) => (
-                                    <li key={idx} className={`${item.level === 1 ? 'ml-0' : item.level === 2 ? 'ml-4' : item.level === 3 ? 'ml-8' : 'ml-12'}`}>
-                                        <a 
-                                            href={`#${item.id}`} 
-                                            className={`block py-1.5 px-2 rounded-md transition-all text-sm ${
-                                                item.level === 1 
-                                                    ? 'text-gray-900 dark:text-gray-100 font-medium hover:bg-gray-100 dark:hover:bg-gray-700' 
-                                                    : item.level === 2
-                                                    ? 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                                            }`}
+                            <ul className="space-y-0.5 toc-tree">
+                                {toc.map((item, idx) => {
+                                    const nextItem = idx < toc.length - 1 ? toc[idx + 1] : null;
+                                    const isLastInLevel = !nextItem || nextItem.level <= item.level;
+                                    const hasChildren = nextItem && nextItem.level > item.level;
+                                    
+                                    // Calculate which parent levels need vertical lines
+                                    const parentLevels = [];
+                                    for (let i = item.level - 1; i >= 1; i--) {
+                                        // Check if there's a sibling at this level after this item
+                                        let hasSiblingAfter = false;
+                                        for (let j = idx + 1; j < toc.length; j++) {
+                                            if (toc[j].level === i) {
+                                                hasSiblingAfter = true;
+                                                break;
+                                            }
+                                            if (toc[j].level < i) break;
+                                        }
+                                        if (hasSiblingAfter) {
+                                            parentLevels.push(i);
+                                        }
+                                    }
+                                    
+                                    return (
+                                        <li 
+                                            key={idx} 
+                                            className={`toc-item toc-level-${item.level} ${item.level > 1 ? 'has-parent' : ''} ${isLastInLevel ? 'last-in-level' : ''} ${hasChildren ? 'has-children' : ''}`}
                                         >
-                                            {item.text}
-                                        </a>
-                                    </li>
-                                ))}
+                                            {/* Vertical lines for parent levels */}
+                                            {parentLevels.map(level => (
+                                                <div
+                                                    key={level}
+                                                    className="absolute top-0 bottom-0 w-px bg-gray-300 dark:bg-gray-600"
+                                                    style={{ left: `${(level - 1) * 24 + 12}px` }}
+                                                />
+                                            ))}
+                                            {/* Horizontal connector */}
+                                            {item.level > 1 && (
+                                                <div 
+                                                    className="absolute left-0 top-2.5 w-4 h-px bg-gray-300 dark:bg-gray-600"
+                                                    style={{ left: `${(item.level - 2) * 24 + 12}px` }}
+                                                />
+                                            )}
+                                            <a 
+                                                href={`#${item.id}`} 
+                                                className={`relative block py-1.5 px-2 rounded-md transition-all text-sm ${
+                                                    item.level === 1 
+                                                        ? 'text-gray-900 dark:text-gray-100 font-medium hover:bg-gray-100 dark:hover:bg-gray-700' 
+                                                        : item.level === 2
+                                                        ? 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                                }`}
+                                                style={{ paddingLeft: item.level > 1 ? `${(item.level - 1) * 24 + 8}px` : '8px' }}
+                                            >
+                                                {item.text}
+                                            </a>
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         </nav>
                     )}

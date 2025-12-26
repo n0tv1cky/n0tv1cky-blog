@@ -38,11 +38,60 @@
   }
   
   .prose pre {
-    @apply bg-gray-100 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto mb-4;
+    @apply bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto mb-4 border border-gray-200 dark:border-gray-700;
   }
   
   .prose pre code {
     @apply bg-transparent p-0 text-gray-800 dark:text-gray-100;
+  }
+  
+  /* Fix highlight.js styles for dark mode */
+  .dark .prose pre code.hljs {
+    @apply text-gray-100;
+  }
+  
+  .dark .prose pre .hljs-keyword,
+  .dark .prose pre .hljs-selector-tag,
+  .dark .prose pre .hljs-literal,
+  .dark .prose pre .hljs-title,
+  .dark .prose pre .hljs-section,
+  .dark .prose pre .hljs-doctag,
+  .dark .prose pre .hljs-type,
+  .dark .prose pre .hljs-name,
+  .dark .prose pre .hljs-strong {
+    @apply text-blue-300;
+  }
+  
+  .dark .prose pre .hljs-string,
+  .dark .prose pre .hljs-title,
+  .dark .prose pre .hljs-section,
+  .dark .prose pre .hljs-built_in,
+  .dark .prose pre .hljs-literal,
+  .dark .prose pre .hljs-type,
+  .dark .prose pre .hljs-addition,
+  .dark .prose pre .hljs-tag,
+  .dark .prose pre .hljs-quote,
+  .dark .prose pre .hljs-name,
+  .dark .prose pre .hljs-selector-id,
+  .dark .prose pre .hljs-selector-class {
+    @apply text-green-300;
+  }
+  
+  .dark .prose pre .hljs-comment,
+  .dark .prose pre .hljs-deletion,
+  .dark .prose pre .hljs-meta {
+    @apply text-gray-400;
+  }
+  
+  .dark .prose pre .hljs-number,
+  .dark .prose pre .hljs-regexp,
+  .dark .prose pre .hljs-symbol,
+  .dark .prose pre .hljs-variable,
+  .dark .prose pre .hljs-template-variable,
+  .dark .prose pre .hljs-link,
+  .dark .prose pre .hljs-selector-attr,
+  .dark .prose pre .hljs-selector-pseudo {
+    @apply text-yellow-300;
   }
   
   .prose img {
@@ -63,6 +112,15 @@
   
   .prose blockquote {
     @apply border-l-4 border-gray-300 pl-4 italic my-4 text-gray-700;
+  }
+  
+  /* Table of Contents Tree Styling */
+  .toc-tree {
+    @apply relative;
+  }
+  
+  .toc-item {
+    @apply relative;
   }
 }
 

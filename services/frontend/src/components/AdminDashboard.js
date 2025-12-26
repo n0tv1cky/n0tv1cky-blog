@@ -141,11 +141,11 @@ export default function AdminDashboard() {
     }, [someSelected]);
 
     return (
-        <main className="min-h-screen bg-gray-50">
+        <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <div className="max-w-6xl mx-auto px-6 py-12">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-4xl font-bold text-gray-900 font-serif">Admin Dashboard</h1>
+                    <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 font-serif">Admin Dashboard</h1>
                     <div className="flex gap-3">
                         {hasToken ? (
                             <>
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
                                 </Link>
                                 <button
                                     onClick={handleLogout}
-                                    className="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                                    className="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                                 >
                                     Log out
                                 </button>
@@ -172,9 +172,9 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Blog List */}
-                <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-semibold text-gray-900">All Blogs</h2>
+                        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">All Blogs</h2>
                         {hasToken && blogs.length > 0 && (
                             <div className="flex items-center gap-4">
                                 {mode === 'view' ? (
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
                                     <>
                                         <button
                                             onClick={handleCancelEditMode}
-                                            className="px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-gray-200 text-gray-700 hover:bg-gray-300 shadow-sm hover:shadow-md text-sm"
+                                            className="px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 shadow-sm hover:shadow-md text-sm"
                                         >
                                             Cancel
                                         </button>
@@ -211,10 +211,10 @@ export default function AdminDashboard() {
                     </div>
                     {loading ? (
                         <div className="text-center py-12">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 dark:border-primary-400"></div>
                         </div>
                     ) : blogs.length === 0 ? (
-                        <div className="text-center py-12 text-gray-500">
+                        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                             <p className="text-lg">No blogs yet.</p>
                             {hasToken && (
                                 <Link href="/admin/new">
@@ -227,16 +227,16 @@ export default function AdminDashboard() {
                     ) : (
                         <div className="space-y-3">
                             {hasToken && mode === 'edit' && blogs.length > 0 && (
-                                <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
+                                <div className="flex items-center gap-3 pb-3 border-b border-gray-200 dark:border-gray-700">
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input
                                             type="checkbox"
                                             ref={selectAllRef}
                                             checked={allSelected}
                                             onChange={handleSelectAll}
-                                            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                                            className="w-4 h-4 text-primary-600 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500 bg-white dark:bg-gray-700"
                                         />
-                                        <span className="text-sm font-medium text-gray-700">
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                             Select All
                                         </span>
                                     </label>
@@ -246,8 +246,8 @@ export default function AdminDashboard() {
                                 <div
                                     key={b.slug}
                                     className={`flex items-center gap-3 p-4 rounded-lg border transition-all ${mode === 'edit' && selectedBlogs.has(b.slug)
-                                        ? 'border-primary-500 bg-primary-50'
-                                        : 'border-gray-200 hover:border-primary-300 hover:shadow-md'
+                                        ? 'border-primary-500 dark:border-primary-400 bg-primary-50 dark:bg-primary-900/20'
+                                        : 'border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md'
                                         } ${mode === 'edit' ? 'cursor-pointer' : ''}`}
                                     onClick={(e) => mode === 'edit' && handleBlogClick(e, b.slug)}
                                 >
@@ -260,7 +260,7 @@ export default function AdminDashboard() {
                                                 handleSelectBlog(b.slug, e.target.checked);
                                             }}
                                             onClick={(e) => e.stopPropagation()}
-                                            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
+                                            className="w-4 h-4 text-primary-600 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500 cursor-pointer bg-white dark:bg-gray-700"
                                         />
                                     )}
                                     {mode === 'view' ? (
@@ -269,24 +269,24 @@ export default function AdminDashboard() {
                                             className="flex-1 flex justify-between items-center group"
                                         >
                                             <div className="flex-1">
-                                                <h3 className="text-lg font-medium text-gray-900 group-hover:text-primary-600 transition-colors">
+                                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                                                     {b.title}
                                                 </h3>
                                                 {b.description && (
-                                                    <p className="text-sm text-gray-600 mt-1 line-clamp-1">{b.description}</p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-1">{b.description}</p>
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-3 ml-4">
                                                 {b.published ? (
-                                                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                                                    <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">
                                                         Published
                                                     </span>
                                                 ) : (
-                                                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                                                    <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-medium">
                                                         Draft
                                                     </span>
                                                 )}
-                                                <svg className="w-5 h-5 text-gray-400 group-hover:text-primary-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                                 </svg>
                                             </div>
@@ -295,22 +295,22 @@ export default function AdminDashboard() {
                                         <div className="flex-1 flex justify-between items-center">
                                             <div className="flex-1">
                                                 <h3 className={`text-lg font-medium transition-colors ${selectedBlogs.has(b.slug)
-                                                    ? 'text-primary-700'
-                                                    : 'text-gray-900'
+                                                    ? 'text-primary-700 dark:text-primary-300'
+                                                    : 'text-gray-900 dark:text-gray-100'
                                                     }`}>
                                                     {b.title}
                                                 </h3>
                                                 {b.description && (
-                                                    <p className="text-sm text-gray-600 mt-1 line-clamp-1">{b.description}</p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-1">{b.description}</p>
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-3 ml-4">
                                                 {b.published ? (
-                                                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                                                    <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">
                                                         Published
                                                     </span>
                                                 ) : (
-                                                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                                                    <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-medium">
                                                         Draft
                                                     </span>
                                                 )}

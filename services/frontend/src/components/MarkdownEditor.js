@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { createBlog, updateBlog, fetchBlog, uploadImage } from '../lib/api';
+import { createBlog, updateBlog, fetchBlog, fetchBlogAdmin, uploadImage } from '../lib/api';
 import ImageUploader from './ImageUploader';
 import DraftAutosave from './DraftAutosave';
 import { useRouter } from 'next/navigation';
@@ -31,7 +31,8 @@ export default function MarkdownEditor({ mode, slug }) {
     useEffect(() => {
         if (mode === 'edit' && slug) {
             let mounted = true;
-            fetchBlog(slug).then(data => {
+            // Use admin endpoint to fetch blog (can fetch drafts too)
+            fetchBlogAdmin(slug).then(data => {
                 if (!mounted) return;
                 if (data) {
                     setTitle(data.title || '');
@@ -40,6 +41,10 @@ export default function MarkdownEditor({ mode, slug }) {
                     setContent(data.content || '');
                     setPublished(!!data.published);
                 }
+            }).catch(err => {
+                if (!mounted) return;
+                console.error('Failed to fetch blog:', err);
+                toast.error('Failed to load blog. Please check your authentication.');
             });
             return () => { mounted = false };
         } else if (mode === 'new') {
@@ -140,7 +145,7 @@ export default function MarkdownEditor({ mode, slug }) {
             setSaveStatus('saved');
             setLastSavedTime(new Date());
             setTimeout(() => {
-                router.push('/admin');
+            router.push('/admin');
             }, 1000);
         } catch (e) {
             const errorMsg = e.message || 'Save failed';
@@ -153,19 +158,19 @@ export default function MarkdownEditor({ mode, slug }) {
     }
 
     return (
-        <main className="min-h-screen bg-gray-50">
+        <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <div className="w-full px-6 py-12">
                 <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-gray-900 font-serif mb-2">
+                    <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 font-serif mb-2">
                         {mode === 'new' ? 'New Blog' : `Edit: ${slug}`}
                     </h1>
-                    <p className="text-gray-600">Create or edit your blog post</p>
+                    <p className="text-gray-600 dark:text-gray-400">Create or edit your blog post</p>
                 </div>
 
                 {/* Save Status Indicator at Top */}
-                <div className="flex items-center gap-2 pb-4 border-b border-gray-200 mb-6">
+                <div className="flex items-center gap-2 pb-4 border-b border-gray-200 dark:border-gray-700 mb-6">
                     {saveStatus === 'saving' && (
-                        <div className="flex items-center gap-2 text-gray-600">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                             <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -174,7 +179,7 @@ export default function MarkdownEditor({ mode, slug }) {
                         </div>
                     )}
                     {saveStatus === 'saved' && (
-                        <div className="flex items-center gap-2 text-green-600">
+                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
@@ -186,56 +191,56 @@ export default function MarkdownEditor({ mode, slug }) {
                     )}
                     {saveStatus === 'idle' && (
                         <div 
-                            className="flex items-center gap-2 text-gray-400 group relative cursor-pointer"
+                            className="flex items-center gap-2 text-gray-400 dark:text-gray-500 group relative cursor-pointer"
                             title={lastSavedTime ? `Last saved: ${lastSavedTime.toLocaleString()}` : 'Not saved yet'}
                         >
                             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                             </svg>
                             {lastSavedTime && (
-                                <span className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                <span className="text-xs text-gray-500 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                                     {lastSavedTime.toLocaleString()}
                                 </span>
                             )}
                         </div>
                     )}
-                </div>
+            </div>
 
                 {/* Basic Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Title <span className="text-red-500">*</span>
                             </label>
                             <input 
                                 value={title} 
                                 onChange={e => setTitle(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                 placeholder="Enter blog title"
                             />
             </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Slug <span className="text-red-500">*</span>
                             </label>
                             <input 
                                 value={blogSlug} 
                                 onChange={e => setBlogSlug(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all font-mono text-sm"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all font-mono text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                 placeholder="blog-slug"
                             />
                         </div>
             </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Description
                         </label>
                         <input 
                             value={description} 
                             onChange={e => setDescription(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                            className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                             placeholder="Brief description of the blog"
                         />
             </div>
@@ -263,17 +268,17 @@ export default function MarkdownEditor({ mode, slug }) {
                 {/* Markdown Editor */}
                 <div className="mb-6">
                         <div className="flex justify-between items-center mb-3">
-                            <label className="block text-sm font-medium text-gray-700">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Content (Markdown)
-                            </label>
-                            <div className="flex gap-0 border border-gray-300 rounded-lg overflow-hidden">
+                </label>
+                            <div className="flex gap-0 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
                                 <button
                                     type="button"
                                     onClick={() => setViewMode('edit')}
                                     className={`px-4 py-2 text-sm font-medium transition-colors ${
                                         viewMode === 'edit'
                                             ? 'bg-primary-600 text-white'
-                                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                            : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                     }`}
                                 >
                                     Edit
@@ -281,10 +286,10 @@ export default function MarkdownEditor({ mode, slug }) {
                                 <button
                                     type="button"
                                     onClick={() => setViewMode('split')}
-                                    className={`px-4 py-2 text-sm font-medium transition-colors border-x border-gray-300 ${
+                                    className={`px-4 py-2 text-sm font-medium transition-colors border-x border-gray-300 dark:border-gray-600 ${
                                         viewMode === 'split'
                                             ? 'bg-primary-600 text-white'
-                                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                            : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                     }`}
                                 >
                                     Split
@@ -295,7 +300,7 @@ export default function MarkdownEditor({ mode, slug }) {
                                     className={`px-4 py-2 text-sm font-medium transition-colors ${
                                         viewMode === 'preview'
                                             ? 'bg-primary-600 text-white'
-                                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                            : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                     }`}
                                 >
                                     Preview
@@ -311,7 +316,7 @@ export default function MarkdownEditor({ mode, slug }) {
                                     <textarea
                                         value={content}
                                         onChange={e => setContent(e.target.value)}
-                                        className={`w-full h-full px-4 py-3 border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all font-mono text-sm resize-none ${
+                                        className={`w-full h-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all font-mono text-sm resize-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${
                                             viewMode === 'split' ? 'rounded-l-lg' : 'rounded-lg'
                                         }`}
                                         placeholder="Write your markdown content here..."
@@ -320,18 +325,18 @@ export default function MarkdownEditor({ mode, slug }) {
                             )}
                             {viewMode === 'split' && (
                                 <div
-                                    className="w-1 bg-gray-300 hover:bg-primary-500 cursor-col-resize transition-colors flex items-center justify-center group relative z-10"
+                                    className="w-1 bg-gray-300 dark:bg-gray-600 hover:bg-primary-500 dark:hover:bg-primary-400 cursor-col-resize transition-colors flex items-center justify-center group relative z-10"
                                     onMouseDown={(e) => {
                                         e.preventDefault();
                                         setIsDragging(true);
                                     }}
                                 >
-                                    <div className="w-1 h-12 bg-gray-400 group-hover:bg-primary-600 rounded transition-colors"></div>
+                                    <div className="w-1 h-12 bg-gray-400 dark:bg-gray-500 group-hover:bg-primary-600 dark:group-hover:bg-primary-500 rounded transition-colors"></div>
                                 </div>
                             )}
                             {(viewMode === 'preview' || viewMode === 'split') && (
                                 <div 
-                                    className={`${viewMode === 'split' ? 'border-l-0' : 'w-full'} border border-gray-300 p-6 bg-white overflow-auto ${
+                                    className={`${viewMode === 'split' ? 'border-l-0' : 'w-full'} border border-gray-300 dark:border-gray-600 p-6 bg-white dark:bg-gray-800 overflow-auto ${
                                         viewMode === 'split' ? 'rounded-r-lg' : 'rounded-lg'
                                     }`}
                                     style={viewMode === 'split' ? { width: `${100 - splitPosition}%` } : {}}
@@ -363,25 +368,25 @@ export default function MarkdownEditor({ mode, slug }) {
                                 </div>
                             )}
                         </div>
-                </div>
+            </div>
 
                 {/* Admin Password */}
                 <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Admin Password <span className="text-red-500">*</span>
                     </label>
                     <input 
                         value={adminPassword} 
                         onChange={e => setAdminPassword(e.target.value)}
                         type="password"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                         placeholder="Enter admin password"
                     />
-                </div>
+            </div>
 
                 {/* Image Upload */}
                 <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Upload Image
                     </label>
                     <ImageUploader 
@@ -389,22 +394,22 @@ export default function MarkdownEditor({ mode, slug }) {
                         blogSlug={blogSlug} 
                         onUpload={(url) => setContent(c => c + `\n\n![Image](${url})\n`)} 
                     />
-                </div>
+            </div>
 
                 {error && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm mb-6">
+                    <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm mb-6">
                         {error}
                     </div>
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex justify-end items-center gap-3 pt-4 border-t border-gray-200">
+                <div className="flex justify-end items-center gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                     {/* Settings Menu (Cog Wheel) */}
                     <div className="relative settings-menu-container">
                         <button
                             type="button"
                             onClick={() => setShowAutosaveMenu(!showAutosaveMenu)}
-                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                             title="Settings"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -413,15 +418,15 @@ export default function MarkdownEditor({ mode, slug }) {
                             </svg>
                         </button>
                         {showAutosaveMenu && (
-                            <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                                <label className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer">
+                            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+                                <label className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                                     <input
                                         type="checkbox"
                                         checked={autosaveEnabled}
                                         onChange={(e) => setAutosaveEnabled(e.target.checked)}
-                                        className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                                        className="w-4 h-4 text-primary-600 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500 bg-white dark:bg-gray-700"
                                     />
-                                    <span className="text-sm text-gray-700">Auto-save drafts (every 30s)</span>
+                                    <span className="text-sm text-gray-700 dark:text-gray-300">Auto-save drafts (every 30s)</span>
                                 </label>
                             </div>
                         )}
@@ -429,7 +434,7 @@ export default function MarkdownEditor({ mode, slug }) {
 
                     <button 
                         onClick={() => router.push('/admin')}
-                        className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                        className="px-6 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                     >
                         Cancel
                     </button>

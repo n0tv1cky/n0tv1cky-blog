@@ -74,6 +74,7 @@ async def list_blogs():
 
 @router.get("/{slug}")
 async def get_blog(slug: str):
+	"""Get a published blog by slug - public endpoint, only returns published blogs"""
 	# First try exact filename match (e.g., about.md)
 	files = glob.glob(f"./blogs/{slug}.md")
 	if not files:
@@ -87,7 +88,7 @@ async def get_blog(slug: str):
 	front, content = parse_markdown_file(files[0])
 	front = front or {}
 	
-	# Check if blog is published - only serve published blogs to public
+	# Only serve published blogs to public - this is the key security check
 	if not front.get('published', False):
 		raise HTTPException(status_code=404, detail="Blog not found")
 	
