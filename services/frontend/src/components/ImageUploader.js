@@ -2,7 +2,7 @@
 import { useRef, useState } from 'react';
 import { uploadImage } from '../lib/api';
 
-export default function ImageUploader({ adminPassword, onUpload }) {
+export default function ImageUploader({ adminPassword, blogSlug, onUpload }) {
     const inputRef = useRef(null);
     const [progress, setProgress] = useState(0);
     const maxSize = typeof window !== 'undefined' && window.NEXT_PUBLIC_MAX_UPLOAD_SIZE ? Number(window.NEXT_PUBLIC_MAX_UPLOAD_SIZE) : (5 * 1024 * 1024);
@@ -11,20 +11,29 @@ export default function ImageUploader({ adminPassword, onUpload }) {
         return new Promise((resolve, reject) => {
             const form = new FormData();
             form.append('file', file, file.name);
+            if (blogSlug) {
+                form.append('blog_slug', blogSlug);
+            }
 
             const xhr = new XMLHttpRequest();
-            // Convert Docker service name to localhost for client-side requests
-            let baseUrl = '';
-            if (typeof window !== 'undefined' && window.NEXT_PUBLIC_BACKEND_URL) {
-                const url = window.NEXT_PUBLIC_BACKEND_URL;
-                if (url.includes('_') || (!url.includes('.') && !url.startsWith('http://localhost') && !url.startsWith('https://'))) {
-                    const port = url.match(/:(\d+)/)?.[1] || '8000';
-                    baseUrl = `http://localhost:${port}`;
-                } else {
-                    baseUrl = url;
+            // Get base URL from environment variable (NEXT_PUBLIC_BACKEND_URL)
+            // Always use absolute URL to backend, never relative (which would go to frontend)
+            let baseUrl = 'http://localhost:8000'; // Default fallback
+            if (typeof window !== 'undefined') {
+                // Try window.NEXT_PUBLIC_BACKEND_URL first (set in layout.js), then process.env
+                const envUrl = window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || '';
+                if (envUrl && envUrl.trim()) {
+                    // If it's a Docker service name (contains underscore or no dots), convert to localhost
+                    if (envUrl.includes('_') || (!envUrl.includes('.') && !envUrl.startsWith('http://localhost') && !envUrl.startsWith('https://'))) {
+                        const port = envUrl.match(/:(\d+)/)?.[1] || '8000';
+                        baseUrl = `http://localhost:${port}`;
+                    } else if (envUrl.startsWith('http://') || envUrl.startsWith('https://')) {
+                        // Valid absolute URL from env variable
+                        baseUrl = envUrl;
+                    }
                 }
             }
-            const url = baseUrl ? `${baseUrl}/api/uploads/image` : `/api/uploads/image`;
+            const url = `${baseUrl}/api/uploads/image`;
             xhr.open('POST', url);
             if (adminPassword) xhr.setRequestHeader('X-ADMIN-PASSWORD', adminPassword);
             if (typeof window !== 'undefined' && window.NEXT_PUBLIC_ADMIN_TOKEN) xhr.setRequestHeader('Authorization', `Bearer ${window.NEXT_PUBLIC_ADMIN_TOKEN}`);
@@ -35,13 +44,34 @@ export default function ImageUploader({ adminPassword, onUpload }) {
             xhr.onload = () => {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     try {
-                        const json = JSON.parse(xhr.responseText);
-                        resolve(json);
+                        // Check if response is JSON
+                        const contentType = xhr.getResponseHeader('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const json = JSON.parse(xhr.responseText);
+                            resolve(json);
+                        } else {
+                            // If not JSON, might be HTML error page
+                            reject(new Error('Server returned non-JSON response. Status: ' + xhr.status));
+                        }
                     } catch (err) {
-                        reject(err);
+                        reject(new Error('Failed to parse response: ' + err.message));
                     }
                 } else {
-                    reject(new Error(xhr.responseText || 'Upload failed'));
+                    // Try to extract error message from response
+                    let errorMsg = 'Upload failed';
+                    try {
+                        const contentType = xhr.getResponseHeader('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const json = JSON.parse(xhr.responseText);
+                            errorMsg = json.detail || json.message || errorMsg;
+                        } else if (xhr.responseText && xhr.responseText.length < 200) {
+                            // Only use short text responses as error messages
+                            errorMsg = xhr.responseText;
+                        }
+                    } catch (e) {
+                        // Ignore parsing errors
+                    }
+                    reject(new Error(errorMsg));
                 }
             };
             xhr.onerror = () => reject(new Error('Network error'));

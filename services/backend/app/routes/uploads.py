@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile, Header, HTTPException, Form
+from fastapi import APIRouter, File, UploadFile, Header, HTTPException, Form, Request
 import os
 from pathlib import Path
 from app.ratelimit import rate_limiter
@@ -15,8 +15,19 @@ MAX_UPLOAD_SIZE = int(os.getenv('MAX_UPLOAD_SIZE', DEFAULT_MAX_UPLOAD_SIZE))
 
 
 @router.post('/image')
-@rate_limiter('upload')
-async def upload_image(file: UploadFile = File(...), blog_slug: str = Form(None), x_admin_password: str = Header(None), authorization: str = Header(None)):
+async def upload_image(request: Request, file: UploadFile = File(...), blog_slug: str = Form(None), x_admin_password: str = Header(None), authorization: str = Header(None)):
+	# Apply rate limiting manually (decorator interferes with FastAPI parameter injection for File/Form)
+	from app.ratelimit import get_client_id, RATE_LIMITS, rate_limits
+	import time
+	client_id = get_client_id(request)
+	max_calls, period = RATE_LIMITS.get('upload', (10, 3600))
+	now = time.time()
+	calls = rate_limits[(client_id, 'upload')]
+	rate_limits[(client_id, 'upload')] = [t for t in calls if now - t < period]
+	if len(rate_limits[(client_id, 'upload')]) >= max_calls:
+		raise HTTPException(status_code=429, detail='Rate limit exceeded')
+	rate_limits[(client_id, 'upload')].append(now)
+	
 	require_admin(x_admin_password, authorization)
 	if not file.content_type.startswith('image/'):
 		raise HTTPException(status_code=400, detail='Only images allowed')

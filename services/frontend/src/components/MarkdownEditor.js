@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 export default function MarkdownEditor({ mode, slug }) {
     const router = useRouter();
     const [title, setTitle] = useState('');
-    const [s, setS] = useState(slug || '');
+    const [blogSlug, setBlogSlug] = useState(slug || '');
     const [description, setDescription] = useState('');
     const [content, setContent] = useState('');
     const [published, setPublished] = useState(false);
@@ -23,7 +23,7 @@ export default function MarkdownEditor({ mode, slug }) {
                 if (!mounted) return;
                 if (data) {
                     setTitle(data.title || '');
-                    setS(data.slug || '');
+                    setBlogSlug(data.slug || '');
                     setDescription(data.description || '');
                     setContent(data.content || '');
                     setPublished(!!data.published);
@@ -33,22 +33,26 @@ export default function MarkdownEditor({ mode, slug }) {
         } else if (mode === 'new') {
             // Try to load draft from localStorage
             const draftKey = `draft_new`;
-            const saved = localStorage.getItem(draftKey);
-            if (saved) {
-                try {
-                    const draft = JSON.parse(saved);
-                    setTitle(draft.title || '');
-                    setS(draft.slug || '');
-                    setDescription(draft.description || '');
-                    setContent(draft.content || '');
-                } catch (e) {
-                    console.error('Failed to load draft', e);
+            if (typeof window !== 'undefined') {
+                const saved = localStorage.getItem(draftKey);
+                if (saved) {
+                    try {
+                        const draft = JSON.parse(saved);
+                        setTitle(draft.title || '');
+                        setBlogSlug(draft.slug || '');
+                        setDescription(draft.description || '');
+                        setContent(draft.content || '');
+                    } catch (e) {
+                        console.error('Failed to load draft', e);
+                    }
                 }
             }
         }
     }, [mode, slug]);
 
     useEffect(() => {
+        if (typeof window === 'undefined') return;
+
         function handlePaste(e) {
             const items = e.clipboardData && e.clipboardData.items;
             if (!items) return;
@@ -57,7 +61,7 @@ export default function MarkdownEditor({ mode, slug }) {
                     const file = item.getAsFile();
                     if (file) {
                         // upload image with blog_slug
-                        const currentSlug = s || title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                        const currentSlug = blogSlug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                         uploadImage(file, adminPassword, currentSlug).then(res => {
                             if (res && res.url) {
                                 // insert markdown image at end
@@ -70,12 +74,12 @@ export default function MarkdownEditor({ mode, slug }) {
         }
         window.addEventListener('paste', handlePaste);
         return () => window.removeEventListener('paste', handlePaste);
-    }, [adminPassword]);
+    }, [adminPassword, blogSlug, title]);
 
     async function handleSave() {
         setLoading(true);
         setError(null);
-        const payload = { title, slug: s, description, content, published };
+        const payload = { title, slug: blogSlug, description, content, published };
         try {
             if (mode === 'new') {
                 await createBlog(payload, adminPassword);
@@ -101,7 +105,7 @@ export default function MarkdownEditor({ mode, slug }) {
 
             <div style={{ marginBottom: 8 }}>
                 <label>Slug</label>
-                <input value={s} onChange={e => setS(e.target.value)} style={{ width: '100%' }} />
+                <input value={blogSlug} onChange={e => setBlogSlug(e.target.value)} style={{ width: '100%' }} />
             </div>
 
             <div style={{ marginBottom: 8 }}>
@@ -110,16 +114,18 @@ export default function MarkdownEditor({ mode, slug }) {
             </div>
 
             <div style={{ marginBottom: 8 }}>
-                <DraftAutosave 
+                <DraftAutosave
                     enabled={true}
                     title={title}
-                    slug={s}
+                    slug={blogSlug}
                     description={description}
                     content={content}
                     onSave={(draft) => {
                         // Save to localStorage
-                        const key = mode === 'new' ? 'draft_new' : `draft_${slug}`;
-                        localStorage.setItem(key, JSON.stringify(draft));
+                        if (typeof window !== 'undefined') {
+                            const key = mode === 'new' ? 'draft_new' : `draft_${slug}`;
+                            localStorage.setItem(key, JSON.stringify(draft));
+                        }
                     }}
                 />
             </div>
@@ -142,7 +148,7 @@ export default function MarkdownEditor({ mode, slug }) {
 
             <div style={{ marginBottom: 8 }}>
                 <label>Upload Image</label>
-                <ImageUploader adminPassword={adminPassword} onUpload={(url) => setContent(c => c + `\n\n![Image](${url})\n`)} />
+                <ImageUploader adminPassword={adminPassword} blogSlug={blogSlug} onUpload={(url) => setContent(c => c + `\n\n![Image](${url})\n`)} />
             </div>
 
             {error && <div style={{ color: 'red' }}>{error}</div>}
