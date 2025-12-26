@@ -7,6 +7,7 @@ from collections import defaultdict
 rate_limits = defaultdict(list)
 
 RATE_LIMITS = {
+    'auth': (5, 3600),      # 5 per hour for authentication attempts
     'react': (10, 3600),    # 10 per hour
     'comment': (3, 3600),   # 3 per hour
     'upload': (10, 3600),   # 10 per hour

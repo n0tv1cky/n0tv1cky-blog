@@ -56,18 +56,18 @@ class AuthRequest(BaseModel):
 
 @router.post('/auth')
 async def admin_auth(auth_req: AuthRequest, request: Request):
-	"""Admin authentication endpoint (rate limited: 3/hour per IP)"""
+	"""Admin authentication endpoint (rate limited: 5/hour per IP)"""
 	# Apply rate limiting manually (decorator interferes with FastAPI parameter injection)
 	from app.ratelimit import get_client_id, RATE_LIMITS, rate_limits
 	import time
 	client_id = get_client_id(request)
-	max_calls, period = RATE_LIMITS.get('comment', (3, 3600))
+	max_calls, period = RATE_LIMITS.get('auth', (5, 3600))
 	now = time.time()
-	calls = rate_limits[(client_id, 'comment')]
-	rate_limits[(client_id, 'comment')] = [t for t in calls if now - t < period]
-	if len(rate_limits[(client_id, 'comment')]) >= max_calls:
+	calls = rate_limits[(client_id, 'auth')]
+	rate_limits[(client_id, 'auth')] = [t for t in calls if now - t < period]
+	if len(rate_limits[(client_id, 'auth')]) >= max_calls:
 		raise HTTPException(status_code=429, detail='Rate limit exceeded')
-	rate_limits[(client_id, 'comment')].append(now)
+	rate_limits[(client_id, 'auth')].append(now)
 	
 	from app.auth_helpers import ADMIN_PASSWORD
 	if auth_req.password != ADMIN_PASSWORD:
