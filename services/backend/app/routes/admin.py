@@ -50,12 +50,15 @@ def write_markdown_file(filename: str, front: dict, content: str):
 
 
 
+class AuthRequest(BaseModel):
+	password: str
+
 @router.post('/auth')
 @rate_limiter('comment')  # Use comment rate limit (3/hour) for login attempts
-async def admin_auth(password: str, request: Request):
+async def admin_auth(auth_req: AuthRequest, request: Request):
 	"""Admin authentication endpoint (rate limited: 3/hour per IP)"""
 	from app.auth_helpers import ADMIN_PASSWORD
-	if password != ADMIN_PASSWORD:
+	if auth_req.password != ADMIN_PASSWORD:
 		raise HTTPException(status_code=401, detail='Invalid credentials')
 	access = create_access_token({'sub': 'admin'})
 	refresh = create_refresh_token({'sub': 'admin'})
@@ -70,6 +73,7 @@ class RefreshRequest(BaseModel):
 @router.post('/auth/refresh')
 async def refresh_token(req: RefreshRequest):
 	# Accept a refresh token and return a new access token
+	from app.auth import verify_token
 	token = req.refresh_token
 	payload = verify_token(token)
 	if not payload:

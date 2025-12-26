@@ -36,7 +36,7 @@ async def get_reactions(slug: str):
 
 @router.post("/{slug}/react")
 @rate_limiter('react')
-async def add_reaction(slug: str, reaction_type: str = Query(..., description="Reaction type: 'like' or 'dislike'"), request: Request):
+async def add_reaction(slug: str, request: Request, reaction_type: str = Query(..., description="Reaction type: 'like' or 'dislike'")):
 	"""Add or update a reaction (rate limited: 10/hour per IP)"""
 	db = SessionLocal()
 	try:

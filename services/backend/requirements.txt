@@ -3,9 +3,10 @@ uvicorn[standard]
 SQLAlchemy
 psycopg2-binary
 python-dotenv
-pydantic
+pydantic[email]
 python-multipart
 PyYAML
 httpx
 python-jose[cryptography]
 pytz
+email-validator

@@ -38,7 +38,8 @@ def ist_to_iso(dt: Optional[datetime]) -> Optional[str]:
 
 def validate_env_vars():
     """Validate required environment variables"""
-    required_vars = ['DATABASE_URL', 'ADMIN_PASSWORD']
+    # Only require DATABASE_URL, ADMIN_PASSWORD has a default
+    required_vars = ['DATABASE_URL']
     missing = []
     for var in required_vars:
         if not os.getenv(var):
@@ -48,11 +49,13 @@ def validate_env_vars():
         raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
     
     # Warn about insecure defaults
-    if os.getenv('ADMIN_PASSWORD') == DEFAULT_ADMIN_PASSWORD:
+    admin_pass = os.getenv('ADMIN_PASSWORD', DEFAULT_ADMIN_PASSWORD)
+    if admin_pass == DEFAULT_ADMIN_PASSWORD:
         import warnings
         warnings.warn("Using default admin password. Change ADMIN_PASSWORD in production!", UserWarning)
     
-    if os.getenv('JWT_SECRET') == DEFAULT_JWT_SECRET:
+    jwt_secret = os.getenv('JWT_SECRET', DEFAULT_JWT_SECRET)
+    if jwt_secret == DEFAULT_JWT_SECRET:
         import warnings
         warnings.warn("Using default JWT secret. Change JWT_SECRET in production!", UserWarning)
 

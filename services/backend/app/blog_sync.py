@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def calculate_reading_time(content: str) -> int:
     """Calculate reading time in minutes based on word count (average 200 words/min)"""
-    from .utils import READING_WORDS_PER_MINUTE
+    READING_WORDS_PER_MINUTE = 200  # Avoid circular import
     # Remove markdown syntax, code blocks, and HTML
     text = content
     # Remove code blocks

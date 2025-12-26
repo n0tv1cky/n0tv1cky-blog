@@ -2,7 +2,7 @@ from fastapi import APIRouter, File, UploadFile, Header, HTTPException, Form
 import os
 from pathlib import Path
 from app.ratelimit import rate_limiter
-from app.utils import get_ist_now
+from app.utils import get_ist_now, DEFAULT_MAX_UPLOAD_SIZE
 from app.auth_helpers import require_admin
 
 router = APIRouter()
@@ -11,7 +11,6 @@ UPLOAD_DIR = './blogs/images'
 Path(UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
 
 # max size in bytes (5MB)
-from app.utils import DEFAULT_MAX_UPLOAD_SIZE
 MAX_UPLOAD_SIZE = int(os.getenv('MAX_UPLOAD_SIZE', DEFAULT_MAX_UPLOAD_SIZE))
 
 

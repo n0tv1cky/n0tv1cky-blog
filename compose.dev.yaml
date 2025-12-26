@@ -44,6 +44,7 @@ services:
     command: npm run dev
     volumes:
       - ./services/frontend:/app
+      - /app/node_modules
     env_file:
       - .env.dev
     environment:
