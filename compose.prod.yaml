@@ -47,6 +47,8 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV}
       BACKEND_URL: ${BACKEND_URL}
+      NEXT_PUBLIC_MAX_UPLOAD_SIZE: ${MAX_UPLOAD_SIZE}
+      NEXT_PUBLIC_ADMIN_TOKEN: ${ADMIN_TOKEN}
       FRONTEND_URL: ${FRONTEND_URL}
     ports:
       - "3000:3000"

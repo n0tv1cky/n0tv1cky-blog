@@ -1,4 +1,39 @@
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { fetchBlogs } from '../lib/api';
+
 export default function AdminDashboard() {
-    // Placeholder: Admin dashboard UI
-    return <div>Admin dashboard will appear here.</div>;
+    const [blogs, setBlogs] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let mounted = true;
+        fetchBlogs().then((data) => {
+            if (mounted) setBlogs(data || []);
+            setLoading(false);
+        }).catch(() => setLoading(false));
+        return () => { mounted = false; };
+    }, []);
+
+    return (
+        <main style={{ padding: '1.5rem' }}>
+            <h1>Admin Dashboard</h1>
+            <div style={{ margin: '1rem 0' }}>
+                <Link href="/admin/new"><button>Create New Blog</button></Link>
+            </div>
+
+            <section>
+                <h2>Published Blogs</h2>
+                {loading && <div>Loading...</div>}
+                {!loading && blogs.length === 0 && <div>No blogs yet.</div>}
+                <ul>
+                    {blogs.map(b => (
+                        <li key={b.slug} style={{ marginBottom: '0.75rem' }}>
+                            <Link href={`/admin/edit/${b.slug}`}><a>{b.title} — {b.published ? 'Published' : 'Draft'}</a></Link>
+                        </li>
+                    ))}
+                </ul>
+            </section>
+        </main>
+    );
 }
