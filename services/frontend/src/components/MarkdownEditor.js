@@ -20,13 +20,41 @@ export default function MarkdownEditor({ mode, slug }) {
     const [adminPassword, setAdminPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [viewMode, setViewMode] = useState('edit'); // 'edit', 'preview', 'split'
+    const [viewMode, setViewMode] = useState('split'); // 'edit', 'preview', 'split'
     const [splitPosition, setSplitPosition] = useState(50); // Percentage for split view
     const [isDragging, setIsDragging] = useState(false);
     const [saveStatus, setSaveStatus] = useState('idle'); // 'idle', 'saving', 'saved'
     const [autosaveEnabled, setAutosaveEnabled] = useState(true);
     const [showAutosaveMenu, setShowAutosaveMenu] = useState(false);
     const [lastSavedTime, setLastSavedTime] = useState(null);
+    const [editorHeight, setEditorHeight] = useState(600);
+    const [isResizing, setIsResizing] = useState(false);
+
+    useEffect(() => {
+        if (!isResizing) return;
+
+        function handleMouseMove(e) {
+            if (!isResizing) return;
+            const container = document.querySelector('.markdown-editor-container');
+            if (!container) return;
+            const rect = container.getBoundingClientRect();
+            const height = e.clientY - rect.top;
+            // Constrain between 200px and 1200px
+            const constrained = Math.max(200, Math.min(1200, height));
+            setEditorHeight(constrained);
+        }
+
+        function handleMouseUp() {
+            setIsResizing(false);
+        }
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isResizing]);
 
     useEffect(() => {
         if (mode === 'edit' && slug) {
@@ -145,7 +173,7 @@ export default function MarkdownEditor({ mode, slug }) {
             setSaveStatus('saved');
             setLastSavedTime(new Date());
             setTimeout(() => {
-            router.push('/admin');
+                router.push('/admin');
             }, 1000);
         } catch (e) {
             const errorMsg = e.message || 'Save failed';
@@ -190,7 +218,7 @@ export default function MarkdownEditor({ mode, slug }) {
                         </div>
                     )}
                     {saveStatus === 'idle' && (
-                        <div 
+                        <div
                             className="flex items-center gap-2 text-gray-400 dark:text-gray-500 group relative cursor-pointer"
                             title={lastSavedTime ? `Last saved: ${lastSavedTime.toLocaleString()}` : 'Not saved yet'}
                         >
@@ -204,121 +232,118 @@ export default function MarkdownEditor({ mode, slug }) {
                             )}
                         </div>
                     )}
-            </div>
+                </div>
 
                 {/* Basic Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Title <span className="text-red-500">*</span>
-                            </label>
-                            <input 
-                                value={title} 
-                                onChange={e => setTitle(e.target.value)}
-                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                                placeholder="Enter blog title"
-                            />
-            </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Slug <span className="text-red-500">*</span>
-                            </label>
-                            <input 
-                                value={blogSlug} 
-                                onChange={e => setBlogSlug(e.target.value)}
-                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all font-mono text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                                placeholder="blog-slug"
-                            />
-                        </div>
-            </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Title <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
+                            className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                            placeholder="Enter blog title"
+                        />
+                    </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Description
+                            Slug <span className="text-red-500">*</span>
                         </label>
-                        <input 
-                            value={description} 
-                            onChange={e => setDescription(e.target.value)}
-                            className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                            placeholder="Brief description of the blog"
+                        <input
+                            value={blogSlug}
+                            onChange={e => setBlogSlug(e.target.value)}
+                            className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all font-mono text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                            placeholder="blog-slug"
                         />
-            </div>
+                    </div>
+                </div>
 
-                    <DraftAutosave
-                        enabled={autosaveEnabled}
-                        title={title}
-                        slug={blogSlug}
-                        description={description}
-                        content={content}
-                        onSave={(draft) => {
-                            // Save to localStorage
-                            if (typeof window !== 'undefined') {
-                                const key = mode === 'new' ? 'draft_new' : `draft_${slug}`;
-                                localStorage.setItem(key, JSON.stringify(draft));
-                            }
-                            // Update save status to show saved indicator
-                            setSaveStatus('saved');
-                            setLastSavedTime(new Date());
-                            setTimeout(() => setSaveStatus('idle'), 2000);
-                        }}
-                        showUI={false}
+                <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Description
+                    </label>
+                    <input
+                        value={description}
+                        onChange={e => setDescription(e.target.value)}
+                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="Brief description of the blog"
                     />
+                </div>
+
+                <DraftAutosave
+                    enabled={autosaveEnabled}
+                    title={title}
+                    slug={blogSlug}
+                    description={description}
+                    content={content}
+                    onSave={(draft) => {
+                        // Save to localStorage
+                        if (typeof window !== 'undefined') {
+                            const key = mode === 'new' ? 'draft_new' : `draft_${slug}`;
+                            localStorage.setItem(key, JSON.stringify(draft));
+                        }
+                        // Update save status to show saved indicator
+                        setSaveStatus('saved');
+                        setLastSavedTime(new Date());
+                        setTimeout(() => setSaveStatus('idle'), 2000);
+                    }}
+                    showUI={false}
+                />
 
                 {/* Markdown Editor */}
                 <div className="mb-6">
-                        <div className="flex justify-between items-center mb-3">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Content (Markdown)
-                </label>
-                            <div className="flex gap-0 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-                                <button
-                                    type="button"
-                                    onClick={() => setViewMode('edit')}
-                                    className={`px-4 py-2 text-sm font-medium transition-colors ${
-                                        viewMode === 'edit'
-                                            ? 'bg-primary-600 text-white'
-                                            : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    <div className="flex justify-between items-center mb-3">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Content (Markdown)
+                        </label>
+                        <div className="flex gap-0 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                            <button
+                                type="button"
+                                onClick={() => setViewMode('edit')}
+                                className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === 'edit'
+                                    ? 'bg-primary-600 text-white'
+                                    : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                     }`}
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setViewMode('split')}
-                                    className={`px-4 py-2 text-sm font-medium transition-colors border-x border-gray-300 dark:border-gray-600 ${
-                                        viewMode === 'split'
-                                            ? 'bg-primary-600 text-white'
-                                            : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            >
+                                Edit
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setViewMode('split')}
+                                className={`px-4 py-2 text-sm font-medium transition-colors border-x border-gray-300 dark:border-gray-600 ${viewMode === 'split'
+                                    ? 'bg-primary-600 text-white'
+                                    : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                     }`}
-                                >
-                                    Split
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setViewMode('preview')}
-                                    className={`px-4 py-2 text-sm font-medium transition-colors ${
-                                        viewMode === 'preview'
-                                            ? 'bg-primary-600 text-white'
-                                            : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            >
+                                Split
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setViewMode('preview')}
+                                className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === 'preview'
+                                    ? 'bg-primary-600 text-white'
+                                    : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                     }`}
-                                >
-                                    Preview
-                                </button>
-                            </div>
+                            >
+                                Preview
+                            </button>
                         </div>
-                        <div className="markdown-editor-container flex gap-0 min-h-[500px] relative">
+                    </div>
+                    <div className="markdown-editor-container flex flex-col gap-0 relative">
+                        <div className="flex gap-0" style={{ height: `${editorHeight}px` }}>
                             {(viewMode === 'edit' || viewMode === 'split') && (
-                                <div 
-                                    className={`${viewMode === 'split' ? '' : 'w-full'}`}
+                                <div
+                                    className={`${viewMode === 'split' ? '' : 'w-full'} h-full`}
                                     style={viewMode === 'split' ? { width: `${splitPosition}%` } : {}}
                                 >
                                     <textarea
                                         value={content}
                                         onChange={e => setContent(e.target.value)}
-                                        className={`w-full h-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all font-mono text-sm resize-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${
-                                            viewMode === 'split' ? 'rounded-l-lg' : 'rounded-lg'
-                                        }`}
+                                        className={`w-full h-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all font-mono text-sm resize-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 overflow-auto ${viewMode === 'split' ? 'rounded-tl-lg' : 'rounded-t-lg'
+                                            }`}
                                         placeholder="Write your markdown content here..."
                                     />
                                 </div>
@@ -335,17 +360,46 @@ export default function MarkdownEditor({ mode, slug }) {
                                 </div>
                             )}
                             {(viewMode === 'preview' || viewMode === 'split') && (
-                                <div 
-                                    className={`${viewMode === 'split' ? 'border-l-0' : 'w-full'} border border-gray-300 dark:border-gray-600 p-6 bg-white dark:bg-gray-800 overflow-auto ${
-                                        viewMode === 'split' ? 'rounded-r-lg' : 'rounded-lg'
-                                    }`}
+                                <div
+                                    className={`${viewMode === 'split' ? 'border-l-0' : 'w-full'} h-full border border-gray-300 dark:border-gray-600 p-6 bg-white dark:bg-gray-800 overflow-auto ${viewMode === 'split' ? 'rounded-tr-lg' : 'rounded-t-lg'
+                                        }`}
                                     style={viewMode === 'split' ? { width: `${100 - splitPosition}%` } : {}}
                                 >
-                                    <div className="prose max-w-none">
+                                    <div className="prose prose-lg max-w-none dark:prose-invert">
                                         <ReactMarkdown
                                             remarkPlugins={[remarkGfm]}
                                             rehypePlugins={[rehypeHighlight]}
                                             components={{
+                                                h1: ({ node, ...props }) => (
+                                                    <h1 className="text-4xl font-bold mb-6 mt-8 text-gray-900 dark:text-gray-100" {...props} />
+                                                ),
+                                                h2: ({ node, ...props }) => (
+                                                    <h2 className="text-3xl font-semibold mb-4 mt-6 text-gray-900 dark:text-gray-100" {...props} />
+                                                ),
+                                                h3: ({ node, ...props }) => (
+                                                    <h3 className="text-2xl font-semibold mb-3 mt-5 text-gray-900 dark:text-gray-100" {...props} />
+                                                ),
+                                                p: ({ node, ...props }) => (
+                                                    <p className="mb-4 text-gray-800 dark:text-gray-200" {...props} />
+                                                ),
+                                                li: ({ node, ...props }) => (
+                                                    <li className="mb-2 text-gray-800 dark:text-gray-200" {...props} />
+                                                ),
+                                                a: ({ node, ...props }) => (
+                                                    <a className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 underline" {...props} />
+                                                ),
+                                                blockquote: ({ node, ...props }) => (
+                                                    <blockquote className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic my-4 text-gray-700 dark:text-gray-300" {...props} />
+                                                ),
+                                                code: ({ node, inline, ...props }) =>
+                                                    inline ? (
+                                                        <code className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800 dark:text-gray-200" {...props} />
+                                                    ) : (
+                                                        <code className="text-gray-100 dark:text-gray-100" {...props} />
+                                                    ),
+                                                pre: ({ node, ...props }) => (
+                                                    <pre className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto mb-4 border border-gray-200 dark:border-gray-700" {...props} />
+                                                ),
                                                 img: ({ node, ...props }) => {
                                                     // Fix image URLs to point to backend
                                                     let src = props.src || '';
@@ -368,33 +422,44 @@ export default function MarkdownEditor({ mode, slug }) {
                                 </div>
                             )}
                         </div>
-            </div>
+                        {/* Vertical Resize Handle */}
+                        <div
+                            className="h-2 bg-gray-200 dark:bg-gray-700 hover:bg-primary-500 dark:hover:bg-primary-400 cursor-row-resize transition-colors flex items-center justify-center group relative w-full rounded-b-lg"
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                setIsResizing(true);
+                            }}
+                        >
+                            <div className="h-1 w-12 bg-gray-400 dark:bg-gray-500 group-hover:bg-primary-600 dark:group-hover:bg-primary-500 rounded transition-colors"></div>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Admin Password */}
                 <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Admin Password <span className="text-red-500">*</span>
                     </label>
-                    <input 
-                        value={adminPassword} 
+                    <input
+                        value={adminPassword}
                         onChange={e => setAdminPassword(e.target.value)}
                         type="password"
                         className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                         placeholder="Enter admin password"
                     />
-            </div>
+                </div>
 
                 {/* Image Upload */}
                 <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Upload Image
                     </label>
-                    <ImageUploader 
-                        adminPassword={adminPassword} 
-                        blogSlug={blogSlug} 
-                        onUpload={(url) => setContent(c => c + `\n\n![Image](${url})\n`)} 
+                    <ImageUploader
+                        adminPassword={adminPassword}
+                        blogSlug={blogSlug}
+                        onUpload={(url) => setContent(c => c + `\n\n![Image](${url})\n`)}
                     />
-            </div>
+                </div>
 
                 {error && (
                     <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm mb-6">
@@ -432,31 +497,29 @@ export default function MarkdownEditor({ mode, slug }) {
                         )}
                     </div>
 
-                    <button 
+                    <button
                         onClick={() => router.push('/admin')}
                         className="px-6 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                     >
                         Cancel
                     </button>
-                    <button 
-                        onClick={() => handleSave(false)} 
+                    <button
+                        onClick={() => handleSave(false)}
                         disabled={loading}
-                        className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${
-                            loading
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-gray-600 hover:bg-gray-700 shadow-sm hover:shadow-md'
-                        } text-white`}
+                        className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${loading
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-gray-600 hover:bg-gray-700 shadow-sm hover:shadow-md'
+                            } text-white`}
                     >
                         {loading && saveStatus === 'saving' ? 'Saving...' : 'Save Draft'}
                     </button>
-                    <button 
-                        onClick={() => handleSave(true)} 
+                    <button
+                        onClick={() => handleSave(true)}
                         disabled={loading}
-                        className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${
-                            loading
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-primary-600 hover:bg-primary-700 shadow-sm hover:shadow-md'
-                        } text-white`}
+                        className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${loading
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-primary-600 hover:bg-primary-700 shadow-sm hover:shadow-md'
+                            } text-white`}
                     >
                         {loading && saveStatus === 'saving' ? 'Publishing...' : 'Publish'}
                     </button>
