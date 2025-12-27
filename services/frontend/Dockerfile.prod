@@ -1,0 +1,23 @@
+FROM node:20-slim AS builder
+WORKDIR /app
+
+# Install dependencies (use npm ci when lockfile exists)
+COPY package.json package-lock.json* ./
+RUN if [ -f package-lock.json ]; then npm ci --silent; else npm install --silent; fi
+
+# Copy source and build
+COPY . .
+RUN npm run build
+
+FROM node:20-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Copy build artifacts and node_modules from builder
+COPY --from=builder /app/.next .next
+COPY --from=builder /app/node_modules node_modules
+COPY --from=builder /app/package.json package.json
+
+EXPOSE 3000
+
+CMD ["npm", "run", "start"]

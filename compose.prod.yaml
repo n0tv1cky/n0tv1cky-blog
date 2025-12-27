@@ -37,11 +37,11 @@ services:
       - blognet
 
   frontend:
-    build: ./services/frontend
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile.prod
     container_name: ${FRONTEND_CONTAINER_NAME:-blog_frontend}
-    command: npm run start
-    volumes:
-      - ./services/frontend:/app:ro
+    # In production we build the image and do not bind-mount source
     env_file:
       - .env.prod
     environment:
