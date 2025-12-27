@@ -2,7 +2,7 @@ version: '3.9'
 services:
   postgres:
     image: postgres:15
-    container_name: ${POSTGRES_CONTAINER_NAME}
+    container_name: ${POSTGRES_CONTAINER_NAME:-postgres}
     restart: always
     env_file:
       - .env.dev
@@ -19,7 +19,7 @@ services:
 
   backend:
     build: ./services/backend
-    container_name: ${BACKEND_CONTAINER_NAME}
+    container_name: ${BACKEND_CONTAINER_NAME:-blog_backend}
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./services/backend/app:/app/app
@@ -40,7 +40,7 @@ services:
 
   frontend:
     build: ./services/frontend
-    container_name: ${FRONTEND_CONTAINER_NAME}
+    container_name: ${FRONTEND_CONTAINER_NAME:-blog_frontend}
     command: npm run dev
     volumes:
       - ./services/frontend:/app
@@ -61,6 +61,8 @@ services:
       - backend
     networks:
       - blognet
+
+  # Nginx is configured for host installation (see services/nginx/setup-host-nginx.sh)
 
 volumes:
   pgdata_dev:

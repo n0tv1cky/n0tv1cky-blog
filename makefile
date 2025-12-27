@@ -16,13 +16,13 @@ dev-rebuild-frontend:
 
 # Production
 prod-up:
-	docker compose -f compose.prod.yaml --env-file .env.prod up -d
+	sudo docker compose -f compose.prod.yaml --env-file .env.prod up --build -d
 
 prod-logs-backend:
-	docker compose -f compose.prod.yaml --env-file .env.prod logs -f backend
+	sudo docker compose -f compose.prod.yaml --env-file .env.prod logs -f backend
 
 prod-restart-frontend:
-	docker compose -f compose.prod.yaml --env-file .env.prod restart frontend
+	sudo docker compose -f compose.prod.yaml --env-file .env.prod restart frontend
 
 prod-down:
-	docker compose -f compose.prod.yaml --env-file .env.prod down
+	sudo docker compose -f compose.prod.yaml --env-file .env.prod down
