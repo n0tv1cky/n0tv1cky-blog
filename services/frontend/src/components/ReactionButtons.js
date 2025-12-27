@@ -1,21 +1,9 @@
 "use client";
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { getBaseUrl } from '../lib/api';
 
-// Helper to get base URL - convert Docker service names to localhost for client-side
-function getBaseUrl() {
-    if (typeof window === 'undefined') {
-        return process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || '';
-    }
-    const url = process.env.NEXT_PUBLIC_BACKEND_URL || '';
-    // If it's a Docker service name (contains underscore or no dots), use localhost
-    if (url && (url.includes('_') || (!url.includes('.') && !url.startsWith('http://localhost') && !url.startsWith('https://')))) {
-        const port = url.match(/:(\d+)/)?.[1] || '8000';
-        return `http://localhost:${port}`;
-    }
-    return url;
-}
-const BASE = getBaseUrl();
+const BASE = (typeof window !== 'undefined') ? getBaseUrl() : (process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || '');
 
 export default function ReactionButtons({ blogSlug }) {
     const [reactions, setReactions] = useState({ likes: 0, dislikes: 0 });
@@ -103,8 +91,8 @@ export default function ReactionButtons({ blogSlug }) {
                     onClick={() => handleReaction('like')}
                     disabled={submitting}
                     className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${userReaction === 'like'
-                            ? 'bg-green-500 text-white shadow-md'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-green-500 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         } ${submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                     <span>👍</span>
@@ -115,8 +103,8 @@ export default function ReactionButtons({ blogSlug }) {
                     onClick={() => handleReaction('dislike')}
                     disabled={submitting}
                     className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${userReaction === 'dislike'
-                            ? 'bg-red-500 text-white shadow-md'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-red-500 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         } ${submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                     <span>👎</span>

@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/{slug}/reactions")
+@router.get("/blogs/{slug}/reactions/")
 async def get_reactions(slug: str):
 	"""Get reaction counts for a blog"""
 	db = SessionLocal()
@@ -34,7 +34,7 @@ async def get_reactions(slug: str):
 		db.close()
 
 
-@router.post("/{slug}/react")
+@router.post("/blogs/{slug}/react/")
 async def add_reaction(slug: str, request: Request, reaction_type: str = Query(..., description="Reaction type: 'like' or 'dislike'")):
 	"""Add or update a reaction (rate limited: 10/hour per IP)"""
 	# Apply rate limiting manually (decorator interferes with FastAPI parameter injection)

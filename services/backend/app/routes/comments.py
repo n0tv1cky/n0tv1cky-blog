@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/{slug}/comments", response_model=List[dict])
+@router.get("/blogs/{slug}/comments/", response_model=List[dict])
 async def get_comments(slug: str):
 	"""Get all comments for a blog"""
 	db = SessionLocal()
@@ -41,7 +41,7 @@ async def get_comments(slug: str):
 		db.close()
 
 
-@router.post("/{slug}/comments")
+@router.post("/blogs/{slug}/comments/")
 async def create_comment(slug: str, comment: CommentCreate, request: Request):
 	"""Create a new comment (rate limited: 3/hour per IP)"""
 	# Apply rate limiting manually (decorator interferes with FastAPI parameter injection)

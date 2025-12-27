@@ -66,13 +66,13 @@ def read_all_blogs(published_only: bool = True):
 	return result
 
 
-@router.get("/", response_model=List[dict])
+@router.get("/blogs/", response_model=List[dict])
 async def list_blogs():
 	"""List all published blogs"""
 	return read_all_blogs(published_only=True)
 
 
-@router.get("/{slug}")
+@router.get("/blogs/{slug}/")
 async def get_blog(slug: str):
 	"""Get a published blog by slug - public endpoint, only returns published blogs"""
 	# First try exact filename match (e.g., about.md)

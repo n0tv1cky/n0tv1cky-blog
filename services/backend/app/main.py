@@ -7,6 +7,7 @@ from app.database import engine, Base
 from app.utils import validate_env_vars
 import os
 import logging
+from fastapi import Request
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -15,7 +16,8 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
 	title="Blog API",
 	description="Blog system API",
-	version="1.0.0"
+	version="1.0.0",
+	redirect_slashes=True
 )
 
 # CORS configuration - restrict in production
@@ -31,13 +33,34 @@ app.add_middleware(
 	allow_headers=["*"],
 )
 
+
+if os.getenv('NODE_ENV') != 'production':
+	@app.middleware("http")
+	async def private_network_middleware(request: Request, call_next):
+		"""Handle Private Network Access (PNA) preflight header in non-production only.
+
+		See docs: services/backend/README.nginx.md for production guidance.
+		"""
+		response = await call_next(request)
+		if request.headers.get("access-control-request-private-network") == "true":
+			response.headers["Access-Control-Allow-Private-Network"] = "true"
+		return response
+
+@app.middleware("http")
+async def proxy_scheme_middleware(request: Request, call_next):
+	"""Fix request URL scheme for proxies that set X-Forwarded-Proto."""
+	forwarded_proto = request.headers.get("x-forwarded-proto")
+	if forwarded_proto:
+		request.scope['scheme'] = forwarded_proto
+	return await call_next(request)
+
 # Routers
-app.include_router(blogs.router, prefix="/api/blogs", tags=["blogs"])
-app.include_router(comments.router, prefix="/api/blogs", tags=["comments"])
-app.include_router(reactions.router, prefix="/api/blogs", tags=["reactions"])
-app.include_router(uploads.router, prefix="/api/uploads", tags=["uploads"])
-app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
-app.include_router(feeds.router, tags=["feeds"])
+app.include_router(blogs.router, prefix="/api", tags=["blogs"])
+app.include_router(comments.router, prefix="/api", tags=["comments"])
+app.include_router(reactions.router, prefix="/api", tags=["reactions"])
+app.include_router(uploads.router, prefix="/api", tags=["uploads"])
+app.include_router(admin.router, prefix="/api", tags=["admin"])
+app.include_router(feeds.router, prefix="/api", tags=["feeds"])
 
 # Serve images directory
 app.mount("/images", StaticFiles(directory="./blogs/images"), name="images")

@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from 'react';
-import { uploadImage } from '../lib/api';
+import { uploadImage, getBaseUrl } from '../lib/api';
 import toast from 'react-hot-toast';
 
 export default function ImageUploader({ adminPassword, blogSlug, onUpload }) {
@@ -17,24 +17,8 @@ export default function ImageUploader({ adminPassword, blogSlug, onUpload }) {
             }
 
             const xhr = new XMLHttpRequest();
-            // Get base URL from environment variable (NEXT_PUBLIC_BACKEND_URL)
-            // Always use absolute URL to backend, never relative (which would go to frontend)
-            let baseUrl = 'http://localhost:8000'; // Default fallback
-            if (typeof window !== 'undefined') {
-                // Try window.NEXT_PUBLIC_BACKEND_URL first (set in layout.js), then process.env
-                const envUrl = window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || '';
-                if (envUrl && envUrl.trim()) {
-                    // If it's a Docker service name (contains underscore or no dots), convert to localhost
-                    if (envUrl.includes('_') || (!envUrl.includes('.') && !envUrl.startsWith('http://localhost') && !envUrl.startsWith('https://'))) {
-                        const port = envUrl.match(/:(\d+)/)?.[1] || '8000';
-                        baseUrl = `http://localhost:${port}`;
-                    } else if (envUrl.startsWith('http://') || envUrl.startsWith('https://')) {
-                        // Valid absolute URL from env variable
-                        baseUrl = envUrl;
-                    }
-                }
-            }
-            const url = `${baseUrl}/api/uploads/image`;
+            const base = (typeof window !== 'undefined') ? getBaseUrl() : (process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:8000');
+            const url = base ? `${base}/api/uploads/image` : `/api/uploads/image`;
             xhr.open('POST', url);
             if (adminPassword) xhr.setRequestHeader('X-ADMIN-PASSWORD', adminPassword);
             if (typeof window !== 'undefined' && window.NEXT_PUBLIC_ADMIN_TOKEN) xhr.setRequestHeader('Authorization', `Bearer ${window.NEXT_PUBLIC_ADMIN_TOKEN}`);
@@ -107,10 +91,10 @@ export default function ImageUploader({ adminPassword, blogSlug, onUpload }) {
         <div className="space-y-3">
             <label className="block">
                 <div className="flex items-center gap-3">
-                    <input 
-                        ref={inputRef} 
-                        type="file" 
-                        accept="image/*" 
+                    <input
+                        ref={inputRef}
+                        type="file"
+                        accept="image/*"
                         onChange={handleFile}
                         className="hidden"
                     />
@@ -133,7 +117,7 @@ export default function ImageUploader({ adminPassword, blogSlug, onUpload }) {
                         <span>{progress}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
+                        <div
                             className="bg-primary-600 h-2 rounded-full transition-all duration-300"
                             style={{ width: `${progress}%` }}
                         ></div>

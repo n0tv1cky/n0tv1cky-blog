@@ -14,7 +14,7 @@ Path(UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
 MAX_UPLOAD_SIZE = int(os.getenv('MAX_UPLOAD_SIZE', DEFAULT_MAX_UPLOAD_SIZE))
 
 
-@router.post('/image')
+@router.post('/uploads/image')
 async def upload_image(request: Request, file: UploadFile = File(...), blog_slug: str = Form(None), x_admin_password: str = Header(None), authorization: str = Header(None)):
 	# Apply rate limiting manually (decorator interferes with FastAPI parameter injection for File/Form)
 	from app.ratelimit import get_client_id, RATE_LIMITS, rate_limits

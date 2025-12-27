@@ -28,6 +28,17 @@
   .prose h3 {
     @apply text-2xl font-semibold mb-3 mt-5 text-gray-900;
   }
+
+  /* Dark mode overrides for custom prose styles */
+  .dark .prose {
+    @apply text-gray-100;
+  }
+
+  .dark .prose h1,
+  .dark .prose h2,
+  .dark .prose h3 {
+    @apply text-gray-100;
+  }
   
   .prose p {
     @apply mb-4;

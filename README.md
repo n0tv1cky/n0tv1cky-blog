@@ -200,6 +200,95 @@ NODE_ENV=production
 ADMIN_PASSWORD=your_secure_password_here
 ```
 
+## Production environment guidance (backend URL)
+
+When deploying to production, prefer same-origin relative requests from the frontend to avoid mixed-content and CORS issues. Use one of these approaches based on your deployment topology:
+
+- **Frontend and backend served from the same origin (recommended)**: do not set `NEXT_PUBLIC_BACKEND_URL` in the frontend. Use relative paths (e.g., `/api`, `/images`) so the browser will call the same origin and use HTTPS automatically when the page is served over TLS.
+
+- **Frontend and backend on separate origins**: set `NEXT_PUBLIC_BACKEND_URL` to a secure absolute URL using `https://` (for example `https://api.n0tv1cky.com`). Avoid using `http://` for production — browsers will block `http://` resource requests when the page is served over `https://`.
+
+Examples:
+- Same-origin (nginx reverse-proxy): do not set `NEXT_PUBLIC_BACKEND_URL`.
+- Different origins: set `NEXT_PUBLIC_BACKEND_URL=https://api.n0tv1cky.com`
+
+Docker Compose / production note:
+
+- The `compose.prod.yaml` in this repo previously forwarded `BACKEND_URL` into the frontend build as `NEXT_PUBLIC_BACKEND_URL`, which bakes an internal HTTP address into the static frontend assets. The `compose.prod.yaml` has been adjusted to avoid exposing `NEXT_PUBLIC_BACKEND_URL` to the frontend image in production. If you need to host the API on a separate origin, set `NEXT_PUBLIC_BACKEND_URL` to an `https://` URL at deploy time (not to an internal Docker `http://` address).
+
+Local development may still rely on `http://localhost:8000`. The frontend falls back to this value only when running locally and no production env var is provided.
+
+## Nginx TLS reverse-proxy example
+
+Below is a recommended nginx configuration snippet (the repo contains `services/nginx/conf.d/default.conf`) that terminates TLS and proxies API and image requests to the backend while serving the frontend app. This ensures all browser-visible traffic is HTTPS and avoids mixed content.
+
+Replace backend/frontend sockets/addresses as appropriate for your environment.
+
+server {
+   listen 80;
+   server_name n0tv1cky.com www.n0tv1cky.com;
+   # Redirect all HTTP to HTTPS
+   location / {
+      return 301 https://$host$request_uri;
+   }
+}
+
+server {
+   listen 443 ssl http2;
+   server_name n0tv1cky.com www.n0tv1cky.com;
+
+   ssl_certificate /etc/letsencrypt/live/n0tv1cky.com/fullchain.pem;
+   ssl_certificate_key /etc/letsencrypt/live/n0tv1cky.com/privkey.pem;
+
+   # Proxy Next.js static assets to frontend (Next dev or production build)
+   location /_next/ {
+      proxy_pass http://127.0.0.1:3000; # frontend
+      proxy_set_header Host $host;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+   }
+
+   # Proxy API requests to backend (FastAPI)
+   location /api/ {
+      proxy_pass http://127.0.0.1:8000; # backend
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_http_version 1.1;
+      proxy_set_header Connection "";
+   }
+
+   # Proxy image requests to backend static files handler
+   location /images/ {
+      proxy_pass http://127.0.0.1:8000; # backend
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+   }
+
+   # All other requests to frontend
+   location / {
+      proxy_pass http://127.0.0.1:3000; # frontend
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+   }
+}
+
+Notes:
+- Ensure `proxy_pass` points to the correct internal addresses for your setup (Docker service names, unix sockets, or loopback ports). When using Docker, you may proxy to `http://backend:8000` from an nginx container on the same Docker network.
+- Keep headers like `X-Forwarded-Proto` so the backend knows the original request scheme (useful if the backend generates absolute URLs or needs to enforce secure cookies).
+- After editing nginx configuration files, test and reload:
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+
 ## Database Schema (Revised)
 
 ### Tables

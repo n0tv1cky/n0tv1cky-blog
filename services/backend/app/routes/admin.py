@@ -98,7 +98,7 @@ async def refresh_token(req: RefreshRequest):
 	return {'access_token': access, 'token_type': 'bearer'}
 
 
-@router.post('/blogs')
+@router.post('/admin/blogs/')
 async def create_blog(payload: BlogCreate, x_admin_password: str = Header(None), authorization: str = Header(None)):
 	"""Create a new blog post"""
 	require_admin(x_admin_password, authorization)
@@ -124,7 +124,7 @@ async def create_blog(payload: BlogCreate, x_admin_password: str = Header(None),
 	return {'ok': True, 'filename': filename}
 
 
-@router.put('/blogs/{slug}')
+@router.put('/admin/blogs/{slug}/')
 async def update_blog(slug: str, payload: BlogCreate, x_admin_password: str = Header(None), authorization: str = Header(None)):
 	"""Update an existing blog post"""
 	require_admin(x_admin_password, authorization)
@@ -168,7 +168,7 @@ async def manual_sync(x_admin_password: str = Header(None), authorization: str =
 	return {'ok': True, 'message': 'Blogs synced successfully'}
 
 
-@router.delete('/blogs/{slug}')
+@router.delete('/admin/blogs/{slug}/')
 async def delete_blog(slug: str, x_admin_password: str = Header(None), authorization: str = Header(None)):
 	"""Delete a blog post (with proper transaction handling)"""
 	require_admin(x_admin_password, authorization)
@@ -208,7 +208,7 @@ async def delete_blog(slug: str, x_admin_password: str = Header(None), authoriza
 	return {'ok': True, 'message': f'Blog {slug} deleted'}
 
 
-@router.patch('/blogs/{slug}/publish')
+@router.patch('/admin/blogs/{slug}/publish/')
 async def toggle_publish(slug: str, x_admin_password: str = Header(None), authorization: str = Header(None)):
 	"""Toggle publish status of a blog"""
 	require_admin(x_admin_password, authorization)
@@ -251,7 +251,7 @@ async def toggle_publish(slug: str, x_admin_password: str = Header(None), author
 	return {'ok': True, 'published': new_published}
 
 
-@router.get('/blogs')
+@router.get('/admin/blogs/')
 async def list_all_blogs(x_admin_password: str = Header(None), authorization: str = Header(None)):
 	"""List all blogs (published and drafts) - admin only"""
 	require_admin(x_admin_password, authorization)
@@ -259,7 +259,7 @@ async def list_all_blogs(x_admin_password: str = Header(None), authorization: st
 	return read_all_blogs(published_only=False)
 
 
-@router.get('/blogs/{slug}')
+@router.get('/admin/blogs/{slug}/')
 async def get_blog_admin(slug: str, x_admin_password: str = Header(None), authorization: str = Header(None)):
 	"""Get a blog by slug for editing - admin only, returns published and draft blogs"""
 	require_admin(x_admin_password, authorization)

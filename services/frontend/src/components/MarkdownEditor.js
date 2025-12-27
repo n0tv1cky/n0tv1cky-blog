@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { createBlog, updateBlog, fetchBlog, fetchBlogAdmin, uploadImage } from '../lib/api';
+import { createBlog, updateBlog, fetchBlog, fetchBlogAdmin, uploadImage, getBaseUrl } from '../lib/api';
 import ImageUploader from './ImageUploader';
 import DraftAutosave from './DraftAutosave';
 import { useRouter } from 'next/navigation';
@@ -417,16 +417,10 @@ export default function MarkdownEditor({ mode, slug }) {
                                                     <pre className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto mb-4 border border-gray-200 dark:border-gray-700" {...props} />
                                                 ),
                                                 img: ({ node, ...props }) => {
-                                                    // Fix image URLs to point to backend
                                                     let src = props.src || '';
                                                     if (src && src.startsWith('/images/')) {
-                                                        const backendUrl = typeof window !== 'undefined'
-                                                            ? (window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000')
-                                                            : 'http://localhost:8000';
-                                                        const baseUrl = backendUrl.includes('_') || (!backendUrl.includes('.') && !backendUrl.startsWith('http://localhost') && !backendUrl.startsWith('https://'))
-                                                            ? `http://localhost:${backendUrl.match(/:(\d+)/)?.[1] || '8000'}`
-                                                            : backendUrl;
-                                                        src = `${baseUrl}${src}`;
+                                                        const base = getBaseUrl();
+                                                        src = base ? `${base}${src}` : src;
                                                     }
                                                     return <img {...props} src={src} className="max-w-full rounded-lg" />;
                                                 }

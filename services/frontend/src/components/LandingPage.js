@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import { fetchBlog } from '../lib/api';
+import { fetchBlog, getBaseUrl } from '../lib/api';
 import 'highlight.js/styles/github.css';
 
 export default function LandingPage() {
@@ -50,22 +50,16 @@ export default function LandingPage() {
                     </div>
                 ) : aboutContent ? (
                     <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 md:p-12">
-                        <div className="prose prose-lg max-w-none">
+                        <div className="prose prose-lg max-w-none dark:prose-invert">
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
                                 rehypePlugins={[rehypeHighlight]}
                                 components={{
                                     img: ({ node, ...props }) => {
-                                        // Fix image URLs to point to backend
                                         let src = props.src || '';
                                         if (src && src.startsWith('/images/')) {
-                                            const backendUrl = typeof window !== 'undefined'
-                                                ? (window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000')
-                                                : 'http://localhost:8000';
-                                            const baseUrl = backendUrl.includes('_') || (!backendUrl.includes('.') && !backendUrl.startsWith('http://localhost') && !backendUrl.startsWith('https://'))
-                                                ? `http://localhost:${backendUrl.match(/:(\d+)/)?.[1] || '8000'}`
-                                                : backendUrl;
-                                            src = `${baseUrl}${src}`;
+                                            const base = getBaseUrl();
+                                            src = base ? `${base}${src}` : src; // relative path when base is ''
                                         }
                                         return <img {...props} src={src} className="max-w-full rounded-lg" />;
                                     }

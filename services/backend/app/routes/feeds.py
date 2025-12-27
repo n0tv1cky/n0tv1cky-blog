@@ -31,7 +31,7 @@ def get_published_blogs():
 	return blogs
 
 
-@router.get("/rss.xml")
+@router.get("/feeds/rss.xml")
 async def rss_feed():
 	"""Generate RSS 2.0 feed for published blogs"""
 	blogs = get_published_blogs()
@@ -81,7 +81,7 @@ async def rss_feed():
 	return Response(content=xml_str, media_type='application/rss+xml')
 
 
-@router.get("/sitemap.xml")
+@router.get("/feeds/sitemap.xml")
 async def sitemap():
 	"""Generate XML sitemap for SEO"""
 	blogs = get_published_blogs()

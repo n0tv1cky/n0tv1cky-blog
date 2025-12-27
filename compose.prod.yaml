@@ -46,9 +46,11 @@ services:
       - .env.prod
     environment:
       NODE_ENV: ${NODE_ENV}
-      BACKEND_URL: ${BACKEND_URL}
-      # Client-side requests must use the backend URL from environment
-      NEXT_PUBLIC_BACKEND_URL: ${BACKEND_URL}
+      # Do not set BACKEND_URL or NEXT_PUBLIC_BACKEND_URL here in production
+      # to avoid baking internal HTTP addresses into the frontend build.
+      # When frontend and backend are served from the same origin, the
+      # client should use relative paths (e.g. /api, /images) so requests
+      # automatically use HTTPS when the page is served over TLS.
       NEXT_PUBLIC_MAX_UPLOAD_SIZE: ${MAX_UPLOAD_SIZE}
       NEXT_PUBLIC_ADMIN_TOKEN: ${ADMIN_TOKEN}
       FRONTEND_URL: ${FRONTEND_URL}

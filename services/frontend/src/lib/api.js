@@ -5,20 +5,46 @@ function getBaseUrl() {
         // Server-side: can use Docker service name
         return process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || '';
     } else {
-        // Client-side: must use localhost or public URL
+        // Client-side: prefer same-origin relative paths for production
         // Check window.NEXT_PUBLIC_BACKEND_URL first (set in layout.js), then process.env
-        const url = window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || '';
-        // If it contains a Docker service name (no dots, contains underscore), use localhost instead
-        if (url && (url.includes('_') || (!url.includes('.') && !url.startsWith('http://localhost') && !url.startsWith('https://')))) {
-            // Extract port if present, default to 8000
-            const port = url.match(/:(\d+)/)?.[1] || '8000';
-            return `http://localhost:${port}`;
+        let url = window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || '';
+        if (url) {
+            try {
+                const parsed = new URL(url, window.location.origin);
+                // If the backend URL is the same origin as the page, use relative paths to avoid CORS/mixed-content
+                if (parsed.origin === window.location.origin) {
+                    console.log('getBaseUrl returning (same origin):', '');
+                    return '';
+                }
+                // If the page is served over HTTPS but backend URL uses HTTP, upgrade to HTTPS
+                if (window.location.protocol === 'https:' && parsed.protocol === 'http:') {
+                    parsed.protocol = 'https:';
+                    const result = parsed.toString().replace(/\/$/, '');
+                    console.log('getBaseUrl returning (upgraded):', result);
+                    return result;
+                }
+                const result = parsed.toString().replace(/\/$/, '');
+                console.log('getBaseUrl returning (absolute):', result);
+                return result;
+            } catch (e) {
+                // If URL parsing fails, fall through to other heuristics
+            }
         }
-        // If no URL is set, default to localhost:8000 for development
-        if (!url) {
-            return 'http://localhost:8000';
+
+        // If we're running in production (hostname matches domain), use relative paths
+        try {
+            const hostname = window.location.hostname || '';
+            if (hostname && (hostname === 'n0tv1cky.com' || hostname === 'www.n0tv1cky.com')) {
+                console.log('getBaseUrl returning (production relative):', '');
+                return '';
+            }
+        } catch (e) {
+            // ignore
         }
-        return url;
+
+        // Default to localhost:8000 for local development (explicit localhost over HTTPS is uncommon)
+        console.log('getBaseUrl returning (localhost fallback):', 'http://localhost:8000');
+        return 'http://localhost:8000';
     }
 }
 
@@ -53,6 +79,7 @@ function getAuthHeaders(adminPassword) {
 export async function fetchBlogs() {
     const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/blogs` : `/api/blogs`;
+    console.log('fetchBlogs BASE:', BASE, 'url:', url);
     const data = await safeFetch(url);
     if (data) return data;
     // fallback mock

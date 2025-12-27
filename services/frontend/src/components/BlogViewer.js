@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import { fetchBlog } from '../lib/api';
+import { fetchBlog, getBaseUrl } from '../lib/api';
 import CommentSection from './CommentSection';
 import ReactionButtons from './ReactionButtons';
 import toast from 'react-hot-toast';
@@ -148,18 +148,10 @@ export default function BlogViewer({ slug }) {
             return <h3 id={id} className="text-2xl font-semibold mb-3 mt-5 text-gray-900 dark:text-gray-100" {...props} />;
         },
         img: ({ node, ...props }) => {
-            // Fix image URLs to point to backend
             let src = props.src || '';
             if (src && src.startsWith('/images/')) {
-                // Get backend URL from env
-                const backendUrl = typeof window !== 'undefined'
-                    ? (window.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000')
-                    : 'http://localhost:8000';
-                // Convert Docker service name to localhost if needed
-                const baseUrl = backendUrl.includes('_') || (!backendUrl.includes('.') && !backendUrl.startsWith('http://localhost') && !backendUrl.startsWith('https://'))
-                    ? `http://localhost:${backendUrl.match(/:(\d+)/)?.[1] || '8000'}`
-                    : backendUrl;
-                src = `${baseUrl}${src}`;
+                const base = getBaseUrl();
+                src = base ? `${base}${src}` : src;
             }
             return (
                 <img
