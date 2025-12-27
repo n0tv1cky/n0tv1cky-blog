@@ -188,6 +188,22 @@ export default function MarkdownEditor({ mode, slug }) {
     return (
         <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <div className="w-full px-6 py-12">
+                {/* Back Button */}
+                <button
+                    onClick={() => router.push('/admin')}
+                    className="mb-6 flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors group"
+                >
+                    <svg
+                        className="w-5 h-5 transition-transform group-hover:-translate-x-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    <span className="font-medium">Back to Admin</span>
+                </button>
+
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 font-serif mb-2">
                         {mode === 'new' ? 'New Blog' : `Edit: ${slug}`}
