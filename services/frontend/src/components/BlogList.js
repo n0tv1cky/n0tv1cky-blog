@@ -39,6 +39,24 @@ export default function BlogList() {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-0 sm:py-2">
+                {/* Back Button */}
+                <button
+                    onClick={() => window.location.href = '/'}
+                    className="mb-4 sm:mb-6 flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors group"
+                >
+                    <svg
+                        className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:-translate-x-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    <span className="text-sm sm:text-base font-medium">Back to Home Page</span>
+                </button>
+            </div>
+
             <div className="max-w-4xl mx-auto px-6">
                 <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-8 font-serif">All Blogs</h1>
                 <div className="space-y-6">

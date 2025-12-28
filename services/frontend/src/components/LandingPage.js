@@ -29,16 +29,30 @@ export default function LandingPage() {
         <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
             <div className="max-w-4xl mx-auto px-6 py-16">
                 {/* Hero Section */}
-                <div className="text-center mb-16">
-                    <h1 className="text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4 font-serif">
-                        Welcome to n0tv1cky's Blog
+                <div className="text-center mb-10 mt-8">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4 font-serif">
+                        Welcome to{' '}
+                        <span className="font-mono text-primary-600 dark:text-primary-400">
+                            n0tv1cky
+                        </span>
+                        's Blog
                     </h1>
-                    <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
-                        A repository of my journey as an AI Engineer, trying to capture the essence of my learnings and experiences.
+                    <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-8">
+                        A repository of my journey as an AI Engineer, trying to capture the essence of my learnings and experiences
                     </p>
                     <Link href="/blogs">
-                        <button className="px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors duration-200 shadow-sm hover:shadow-md">
+                        <button className="mx-auto flex px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors duration-200 shadow-sm hover:shadow-md items-center justify-center gap-2">
                             View All Blogs
+                            <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                viewBox="0 0 24 24"
+                                aria-hidden="true"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
                         </button>
                     </Link>
                 </div>
