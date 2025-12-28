@@ -1,29 +1,22 @@
 "use client";
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import { fetchBlog, getBaseUrl } from '../lib/api';
+import { getBaseUrl } from '../lib/api';
 import 'highlight.js/styles/github.css';
 
 export default function LandingPage() {
-    const [aboutContent, setAboutContent] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const aboutContent = `# About Me
 
-    useEffect(() => {
-        // Fetch the about.md file
-        fetchBlog('about')
-            .then((data) => {
-                if (data && data.content) {
-                    setAboutContent(data.content);
-                }
-                setLoading(false);
-            })
-            .catch(() => {
-                setLoading(false);
-            });
-    }, []);
+I’m a systems-minded software engineer who enjoys building reliable, production-grade software—and understanding what happens when it doesn’t behave as expected. I work across the stack—backend, frontend, and infrastructure—often owning projects end-to-end, from design to deployment.
+
+I love building projects, often breaking them, and learning from the failures and experiments that follow. This blog is a reflection of that process: what I tried, what went wrong, what worked, and what I’d do differently next time. Much of my work sits at the intersection of **AI systems and engineering**—deploying LLM and multimodal models, optimizing inference, and automating document-heavy workflows.
+
+I care deeply about clean design, observability, and security in production. Writing code is only part of the job for me; I’m equally interested in how systems scale, fail, recover, and evolve over time.
+
+Outside of coding, I run, swim, play badminton, and enjoy photography.`;
+    const loading = false;
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
