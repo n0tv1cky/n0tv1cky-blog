@@ -256,6 +256,3 @@ __marimo__/
 
 # .env files
 **.env.**
-
-# /blogs temporary files
-**/blogs

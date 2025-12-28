@@ -1,6 +1,6 @@
 // For client-side requests, use localhost or the public URL
 // Docker service names only work server-side
-function getBaseUrl() {
+export function getBaseUrl() {
     if (typeof window === 'undefined') {
         // Server-side: can use Docker service name
         return process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || '';
