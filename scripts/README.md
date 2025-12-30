@@ -4,7 +4,7 @@ This script runs `git pull` and `make prod-up` every midnight to keep the blog p
 
 ## Files
 - `update-prod.sh`: The main script that performs the update.
-- `update-prod.log`: Log file where script output is appended. On success, only a timestamp and "Build succeeded" is logged. On failure, full build logs are stored for debugging.
+- `update-prod.log`: Log file where script output is appended. On success, only a timestamp and "Build succeeded" is logged. On failure, full build logs are stored for debugging. All timestamps are in IST (Indian Standard Time).
 
 ## Git Authentication Setup
 

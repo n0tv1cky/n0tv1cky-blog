@@ -7,7 +7,7 @@ LOG_FILE="/home/n0tv1cky/n0tv1cky-blog/scripts/update-prod.log"
 
 cd /home/n0tv1cky/n0tv1cky-blog
 
-echo "=== Update started at $(date) ===" >> "$LOG_FILE"
+echo "=== Update started at $(TZ='Asia/Kolkata' date) ===" >> "$LOG_FILE"
 
 echo "Pulling latest changes from git..." >> "$LOG_FILE"
 # Set up git credentials if GITHUB_TOKEN is provided
@@ -22,9 +22,9 @@ echo "$GIT_OUTPUT" >> "$LOG_FILE"
 
 echo "Starting production containers..." >> "$LOG_FILE"
 if make prod-up >> "$LOG_FILE" 2>&1; then
-    echo "Build succeeded at $(date)" >> "$LOG_FILE"
+    echo "Build succeeded at $(TZ='Asia/Kolkata' date)" >> "$LOG_FILE"
 else
-    echo "Build failed at $(date) - full logs above" >> "$LOG_FILE"
+    echo "Build failed at $(TZ='Asia/Kolkata' date) - full logs above" >> "$LOG_FILE"
 fi
 
-echo "Update complete at $(date)" >> "$LOG_FILE"
+echo "Update complete at $(TZ='Asia/Kolkata' date)" >> "$LOG_FILE"
