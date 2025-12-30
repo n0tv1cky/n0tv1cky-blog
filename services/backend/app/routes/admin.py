@@ -54,7 +54,7 @@ def write_markdown_file(filename: str, front: dict, content: str):
 class AuthRequest(BaseModel):
 	password: str
 
-@router.post('/auth')
+@router.post('/admin/auth')
 async def admin_auth(auth_req: AuthRequest, request: Request):
 	"""Admin authentication endpoint (rate limited: 5/hour per IP)"""
 	# Apply rate limiting manually (decorator interferes with FastAPI parameter injection)
@@ -82,7 +82,7 @@ class RefreshRequest(BaseModel):
 	refresh_token: str
 
 
-@router.post('/auth/refresh')
+@router.post('/admin/auth/refresh')
 async def refresh_token(req: RefreshRequest):
 	# Accept a refresh token and return a new access token
 	from app.auth import verify_token

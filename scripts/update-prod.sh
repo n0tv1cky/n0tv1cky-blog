@@ -10,6 +10,13 @@ cd /home/n0tv1cky/n0tv1cky-blog
 echo "=== Update started at $(date) ===" >> "$LOG_FILE"
 
 echo "Pulling latest changes from git..." >> "$LOG_FILE"
+# Set up git credentials if GITHUB_TOKEN is provided
+if [ -n "$GITHUB_TOKEN" ]; then
+    git config --global credential.helper store
+    echo "https://oauth2:$GITHUB_TOKEN@github.com" > ~/.git-credentials
+    chmod 600 ~/.git-credentials
+fi
+
 GIT_OUTPUT=$(git pull 2>&1)
 echo "$GIT_OUTPUT" >> "$LOG_FILE"
 
