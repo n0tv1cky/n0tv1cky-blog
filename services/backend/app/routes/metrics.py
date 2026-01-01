@@ -9,7 +9,6 @@ from ..schemas import (
     SessionCreate, PageViewCreate, PageViewUpdate, 
     InteractionEventCreate, MetricsResponse
 )
-from ..ratelimit import limiter
 
 router = APIRouter(prefix="/api/metrics", tags=["metrics"])
 

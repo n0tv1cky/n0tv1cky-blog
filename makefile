@@ -4,19 +4,19 @@ setup-vm:
 	@./scripts/setup-vm-dev.sh
 
 dev-up:
-	docker compose -f compose.dev.yaml --env-file .env.dev up --build
+	sudo docker compose -f compose.dev.yaml --env-file .env.dev up --build -d
 
 dev-up-bg:
-	docker compose -f compose.dev.yaml --env-file .env.dev up -d
+	sudo docker compose -f compose.dev.yaml --env-file .env.dev up -d
 
 dev-logs:
-	docker compose -f compose.dev.yaml --env-file .env.dev logs -f
+	sudo docker compose -f compose.dev.yaml --env-file .env.dev logs -f
 
 dev-down:
-	docker compose -f compose.dev.yaml --env-file .env.dev down
+	sudo docker compose -f compose.dev.yaml --env-file .env.dev down
 
 dev-rebuild-frontend:
-	docker compose -f compose.dev.yaml --env-file .env.dev up --build frontend
+	sudo docker compose -f compose.dev.yaml --env-file .env.dev up --build frontend
 
 # Production
 prod-up:

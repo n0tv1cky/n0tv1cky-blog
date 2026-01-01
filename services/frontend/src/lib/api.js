@@ -263,12 +263,16 @@ export function logout() {
     }
 }
 
-async function authFetch(url, opts = {}) {
+export async function authFetch(url, opts = {}) {
     // opts: {method, headers, body, adminPassword}
     const adminPassword = opts.adminPassword;
     const method = opts.method || 'GET';
     const body = opts.body;
     let headers = opts.headers || {};
+
+    // Prepend base URL if the URL is relative
+    const BASE = getBaseUrl();
+    const fullUrl = url.startsWith('http') ? url : (BASE ? `${BASE}${url}` : url);
 
     // Attach auth headers
     headers = Object.assign({}, headers, getAuthHeaders(adminPassword));
@@ -276,14 +280,14 @@ async function authFetch(url, opts = {}) {
     // If it's a form (FormData), do not set content-type
     const fetchOpts = { method, headers, body };
 
-    let res = await fetch(url, fetchOpts);
+    let res = await fetch(fullUrl, fetchOpts);
     if (res.status === 401) {
         // try refresh
         const newToken = await refreshToken();
         if (newToken) {
             headers = Object.assign({}, opts.headers || {}, getAuthHeaders(adminPassword));
             // retry once
-            res = await fetch(url, { method, headers, body });
+            res = await fetch(fullUrl, { method, headers, body });
         } else {
             // logout if refresh failed
             logout();
