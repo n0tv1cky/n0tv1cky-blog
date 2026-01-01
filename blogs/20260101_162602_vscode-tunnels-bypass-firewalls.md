@@ -4,14 +4,15 @@ slug: vscode-tunnels-bypass-firewalls
 published: true
 published_at: '2026-01-01T16:26:02.756569+05:30'
 created_at: '2026-01-01T16:26:02.756569+05:30'
-updated_at: '2026-01-01T19:12:12.528801+05:30'
+updated_at: '2026-01-01T21:11:23.255520+05:30'
 description: Deep dive into how VSCode tunnels bypass UFW firewalls using stateful
-  connections. Diving into why traditional firewalls can't block them and how to detect
+  connections. Get to know why traditional firewalls can't block them and how to detect
   them.
 tags: []
 category: null
 author: admin
 ---
+
 
 
 

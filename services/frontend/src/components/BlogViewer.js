@@ -359,6 +359,9 @@ export default function BlogViewer({ slug }) {
                         </ReactMarkdown>
                     </article>
 
+                    {/* Separator border */}
+                    <div className="border-t border-gray-200 dark:border-gray-700 mb-6 sm:mb-8"></div>
+
                     <ReactionButtons blogSlug={slug} />
                     <CommentSection blogSlug={slug} />
                 </div>

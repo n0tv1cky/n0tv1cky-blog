@@ -85,32 +85,30 @@ export default function ReactionButtons({ blogSlug }) {
     }
 
     return (
-        <div className="py-6 border-y border-gray-200">
-            <div className="flex gap-3">
-                <button
-                    onClick={() => handleReaction('like')}
-                    disabled={submitting}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${userReaction === 'like'
-                        ? 'bg-green-500 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        } ${submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
-                    <span>👍</span>
-                    <span>Like ({reactions.likes})</span>
-                </button>
+        <div className="flex gap-3">
+            <button
+                onClick={() => handleReaction('like')}
+                disabled={submitting}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${userReaction === 'like'
+                    ? 'bg-green-500 text-white shadow-md'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    } ${submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+                <span>👍</span>
+                <span>Like ({reactions.likes})</span>
+            </button>
 
-                <button
-                    onClick={() => handleReaction('dislike')}
-                    disabled={submitting}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${userReaction === 'dislike'
-                        ? 'bg-red-500 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        } ${submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
-                    <span>👎</span>
-                    <span>Dislike ({reactions.dislikes})</span>
-                </button>
-            </div>
+            <button
+                onClick={() => handleReaction('dislike')}
+                disabled={submitting}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${userReaction === 'dislike'
+                    ? 'bg-red-500 text-white shadow-md'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    } ${submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+                <span>👎</span>
+                <span>Dislike ({reactions.dislikes})</span>
+            </button>
         </div>
     );
 }

@@ -99,7 +99,7 @@ export default function CommentSection({ blogSlug }) {
     }
 
     return (
-        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+        <div className="mt-8">
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
                 Comments ({comments.length})
             </h2>
