@@ -14,6 +14,8 @@ export default function BlogViewer({ slug }) {
     const [loading, setLoading] = useState(true);
     const [toc, setToc] = useState([]);
     const [selectedImage, setSelectedImage] = useState(null);
+    const [tocOpen, setTocOpen] = useState(true);
+    const [collapsedHeadings, setCollapsedHeadings] = useState({});
     const articleRef = useRef(null);
 
     const generateId = (text) => {
@@ -33,16 +35,37 @@ export default function BlogViewer({ slug }) {
                     if (data.content) {
                         const headers = [];
                         const lines = data.content.split('\n');
+                        let inCodeBlock = false;
+
                         lines.forEach((line, index) => {
-                            const match = line.match(/^(#{1,6})\s+(.+)$/);
-                            if (match) {
-                                const level = match[1].length;
-                                const text = match[2];
-                                const id = generateId(text);
-                                headers.push({ level, text, id, line: index });
+                            // Toggle code block state when encountering triple backticks
+                            if (line.trim().startsWith('```')) {
+                                inCodeBlock = !inCodeBlock;
+                                return;
+                            }
+
+                            // Only match headers outside of code blocks
+                            if (!inCodeBlock) {
+                                const match = line.match(/^(#{1,6})\s+(.+)$/);
+                                if (match) {
+                                    const level = match[1].length;
+                                    const text = match[2];
+                                    const id = generateId(text);
+                                    headers.push({ level, text, id, line: index });
+                                }
                             }
                         });
                         setToc(headers);
+
+                        // Initialize all headings with children as collapsed
+                        const initialCollapsedState = {};
+                        headers.forEach((item, idx) => {
+                            const hasChildren = idx < headers.length - 1 && headers[idx + 1].level > item.level;
+                            if (hasChildren) {
+                                initialCollapsedState[idx] = true;
+                            }
+                        });
+                        setCollapsedHeadings(initialCollapsedState);
                     }
                 }
                 setLoading(false);
@@ -229,62 +252,96 @@ export default function BlogViewer({ slug }) {
                     {/* Table of Contents */}
                     {toc.length > 0 && (
                         <nav className="mb-6 sm:mb-8 p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4 flex items-center gap-2">
+                            <button
+                                onClick={() => setTocOpen(!tocOpen)}
+                                className="w-full text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4 flex items-center gap-2 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                            >
+                                <svg
+                                    className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200 ${tocOpen ? 'rotate-90' : ''}`}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
                                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
                                 </svg>
                                 Table of Contents
-                            </h3>
-                            <ul className="space-y-0.5 sm:space-y-1">
-                                {toc.map((item, idx) => {
-                                    const nextItem = idx < toc.length - 1 ? toc[idx + 1] : null;
-                                    const isLastInLevel = !nextItem || nextItem.level <= item.level;
+                            </button>
+                            {tocOpen && (
+                                <ul className="space-y-0.5 sm:space-y-1">
+                                    {toc.map((item, idx) => {
+                                        // Find children (next items with higher level until we hit same or lower level)
+                                        const hasChildren = idx < toc.length - 1 && toc[idx + 1].level > item.level;
+                                        const isCollapsed = collapsedHeadings[idx];
 
-                                    return (
-                                        <li
-                                            key={idx}
-                                            className="relative"
-                                            style={{
-                                                paddingLeft: item.level > 1 ? `${(item.level - 1) * 16}px` : '0px'
-                                            }}
-                                        >
-                                            {item.level > 1 && (
-                                                <div
-                                                    className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-gray-300 via-gray-300 to-transparent dark:from-gray-600 dark:via-gray-600"
-                                                    style={{
-                                                        left: `${(item.level - 2) * 16 + 6}px`,
-                                                        height: isLastInLevel ? '50%' : '100%'
-                                                    }}
-                                                />
-                                            )}
-                                            {item.level > 1 && (
-                                                <div
-                                                    className="absolute top-1/2 -translate-y-1/2 h-px bg-gray-300 dark:bg-gray-600"
-                                                    style={{
-                                                        left: `${(item.level - 2) * 16 + 6}px`,
-                                                        width: '6px'
-                                                    }}
-                                                />
-                                            )}
+                                        // Determine if this item should be hidden because its IMMEDIATE parent is collapsed
+                                        let isHidden = false;
+                                        // Find the immediate parent (closest previous item with level = current level - 1)
+                                        for (let i = idx - 1; i >= 0; i--) {
+                                            if (toc[i].level === item.level - 1) {
+                                                // Found immediate parent, check if it's collapsed
+                                                if (collapsedHeadings[i]) {
+                                                    isHidden = true;
+                                                }
+                                                break; // Stop after finding immediate parent
+                                            }
+                                        }
 
-                                            <a
-                                                href={`#${item.id}`}
-                                                className={`relative block py-1.5 sm:py-2 px-2 sm:px-3 rounded-md sm:rounded-lg transition-all group text-sm sm:text-base ${item.level === 1
-                                                    ? 'text-gray-900 dark:text-gray-100 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700/70'
-                                                    : item.level === 2
-                                                        ? 'text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                                                    }`}
+                                        if (isHidden) return null;
+
+                                        const toggleCollapse = (e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setCollapsedHeadings(prev => ({
+                                                ...prev,
+                                                [idx]: !prev[idx]
+                                            }));
+                                        };
+
+                                        return (
+                                            <li
+                                                key={idx}
+                                                className="relative"
+                                                style={{
+                                                    paddingLeft: item.level > 1 ? `${(item.level - 1) * 16}px` : '0px'
+                                                }}
                                             >
-                                                {item.level > 1 && (
-                                                    <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500 group-hover:bg-primary-500 transition-colors" />
-                                                )}
-                                                <span className={item.level > 1 ? 'ml-2 sm:ml-3' : ''}>{item.text}</span>
-                                            </a>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
+                                                <div className="flex items-center gap-1">
+                                                    {hasChildren && (
+                                                        <button
+                                                            onClick={toggleCollapse}
+                                                            className="flex-shrink-0 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                                                        >
+                                                            <svg
+                                                                className={`w-3 h-3 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`}
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                viewBox="0 0 24 24"
+                                                            >
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                            </svg>
+                                                        </button>
+                                                    )}
+                                                    {!hasChildren && <span className="w-5" />}
+                                                    <a
+                                                        href={`#${item.id}`}
+                                                        className={`flex-1 block py-1.5 sm:py-2 px-2 sm:px-3 rounded-md sm:rounded-lg transition-all group text-sm sm:text-base ${item.level === 1
+                                                            ? 'text-gray-900 dark:text-gray-100 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700/70'
+                                                            : item.level === 2
+                                                                ? 'text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                                            }`}
+                                                    >
+                                                        {item.text}
+                                                    </a>
+                                                </div>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            )}
                         </nav>
                     )}
 
