@@ -91,22 +91,12 @@ export async function fetchAllBlogs() {
     const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/admin/blogs` : `/api/admin/blogs`;
     try {
-        const res = await authFetch(url, {
+        const data = await authFetch(url, {
             method: 'GET'
         });
-        if (res.status === 403) {
-            const error = new Error('Invalid credentials');
-            error.status = 403;
-            throw error;
-        }
-        if (!res.ok) {
-            return [];
-        }
-        return await res.json();
+        return data;
     } catch (e) {
-        if (e.status === 403) {
-            throw e; // Re-throw 403 errors to be handled by component
-        }
+        console.error('fetchAllBlogs error:', e);
         return [];
     }
 }
@@ -125,22 +115,12 @@ export async function fetchBlogAdmin(slug) {
     const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/admin/blogs/${slug}` : `/api/admin/blogs/${slug}`;
     try {
-        const res = await authFetch(url, {
+        const data = await authFetch(url, {
             method: 'GET'
         });
-        if (res.status === 403) {
-            const error = new Error('Invalid credentials');
-            error.status = 403;
-            throw error;
-        }
-        if (!res.ok) {
-            return null;
-        }
-        return await res.json();
+        return data;
     } catch (e) {
-        if (e.status === 403) {
-            throw e; // Re-throw 403 errors to be handled by component
-        }
+        console.error('fetchBlogAdmin error:', e);
         return null;
     }
 }
@@ -149,17 +129,13 @@ export async function createBlog(payload, adminPassword) {
     const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/admin/blogs` : `/api/admin/blogs`;
     try {
-        const res = await authFetch(url, {
+        const data = await authFetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
             adminPassword
         });
-        if (!res.ok) {
-            const text = await res.text();
-            throw new Error(text || 'Create failed');
-        }
-        return await res.json();
+        return data;
     } catch (e) {
         throw e;
     }
@@ -169,17 +145,13 @@ export async function updateBlog(slug, payload, adminPassword) {
     const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/admin/blogs/${slug}` : `/api/admin/blogs/${slug}`;
     try {
-        const res = await authFetch(url, {
+        const data = await authFetch(url, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
             adminPassword
         });
-        if (!res.ok) {
-            const text = await res.text();
-            throw new Error(text || 'Update failed');
-        }
-        return await res.json();
+        return data;
     } catch (e) {
         throw e;
     }
@@ -195,16 +167,12 @@ export async function uploadImage(file, adminPassword, blogSlug = null) {
     }
     try {
         // We can't include Content-Type here; rely on authFetch to set headers and refresh tokens if needed
-        const res = await authFetch(url, {
+        const data = await authFetch(url, {
             method: 'POST',
             body: form,
             adminPassword
         });
-        if (!res.ok) {
-            const text = await res.text();
-            throw new Error(text || 'Upload failed');
-        }
-        return await res.json();
+        return data;
     } catch (e) {
         throw e;
     }
@@ -242,15 +210,11 @@ export async function deleteBlog(slug, adminPassword) {
     const BASE = getBaseUrl();
     const url = BASE ? `${BASE}/api/admin/blogs/${slug}` : `/api/admin/blogs/${slug}`;
     try {
-        const res = await authFetch(url, {
+        const data = await authFetch(url, {
             method: 'DELETE',
             adminPassword
         });
-        if (!res.ok) {
-            const text = await res.text();
-            throw new Error(text || 'Delete failed');
-        }
-        return await res.json();
+        return data;
     } catch (e) {
         throw e;
     }
@@ -302,5 +266,10 @@ export async function authFetch(url, opts = {}) {
             logout();
         }
     }
-    return res;
+
+    if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+    }
+
+    return await res.json();
 }
