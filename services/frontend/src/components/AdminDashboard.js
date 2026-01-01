@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchAllBlogs, deleteBlog } from '../lib/api';
+import MetricsDashboard from './MetricsDashboard';
 import toast from 'react-hot-toast';
 
 export default function AdminDashboard() {
@@ -13,6 +14,7 @@ export default function AdminDashboard() {
     const [selectedBlogs, setSelectedBlogs] = useState(new Set());
     const [isDeleting, setIsDeleting] = useState(false);
     const [invalidCreds, setInvalidCreds] = useState(false);
+    const [activeTab, setActiveTab] = useState('blogs'); // 'blogs' or 'metrics'
     const selectAllRef = useRef(null);
     const router = useRouter();
 
@@ -195,27 +197,61 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                {/* Blog List */}
-                <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">All Blogs</h2>
-                        {hasToken && blogs.length > 0 && (
-                            <div className="flex items-center gap-4">
-                                {mode === 'view' ? (
-                                    <button
-                                        onClick={handleEnterEditMode}
-                                        className="px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-primary-600 text-white hover:bg-primary-700 shadow-sm hover:shadow-md text-sm"
-                                    >
-                                        Edit Mode
-                                    </button>
-                                ) : (
-                                    <>
+                {/* Tabs */}
+                <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-700">
+                    <button
+                        onClick={() => setActiveTab('blogs')}
+                        className={`px-6 py-3 font-medium transition-colors relative ${
+                            activeTab === 'blogs'
+                                ? 'text-primary-600 dark:text-primary-400'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                        }`}
+                    >
+                        Blogs
+                        {activeTab === 'blogs' && (
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 dark:bg-primary-400"></div>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('metrics')}
+                        className={`px-6 py-3 font-medium transition-colors relative ${
+                            activeTab === 'metrics'
+                                ? 'text-primary-600 dark:text-primary-400'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                        }`}
+                    >
+                        Metrics
+                        {activeTab === 'metrics' && (
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 dark:bg-primary-400"></div>
+                        )}
+                    </button>
+                </div>
+
+                {/* Tab Content */}
+                {activeTab === 'metrics' ? (
+                    <MetricsDashboard />
+                ) : (
+                    /* Blog List */
+                    <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">All Blogs</h2>
+                            {hasToken && blogs.length > 0 && (
+                                <div className="flex items-center gap-4">
+                                    {mode === 'view' ? (
                                         <button
-                                            onClick={handleCancelEditMode}
-                                            className="px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 shadow-sm hover:shadow-md text-sm"
+                                            onClick={handleEnterEditMode}
+                                            className="px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-primary-600 text-white hover:bg-primary-700 shadow-sm hover:shadow-md text-sm"
                                         >
-                                            Cancel
+                                            Edit Mode
                                         </button>
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={handleCancelEditMode}
+                                                className="px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 shadow-sm hover:shadow-md text-sm"
+                                            >
+                                                Cancel
+                                            </button>
                                         {selectedBlogs.size > 0 && (
                                             <button
                                                 onClick={handleDeleteSelected}
@@ -346,6 +382,7 @@ export default function AdminDashboard() {
                         </div>
                     )}
                 </section>
+                )}
             </div>
         </main>
     );

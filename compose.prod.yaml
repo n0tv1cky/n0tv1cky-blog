@@ -30,7 +30,7 @@ services:
       FRONTEND_URL: ${FRONTEND_URL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     depends_on:
       - postgres
     networks:
@@ -55,7 +55,7 @@ services:
       NEXT_PUBLIC_ADMIN_TOKEN: ${ADMIN_TOKEN}
       FRONTEND_URL: ${FRONTEND_URL}
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
       - backend
     networks:

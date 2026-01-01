@@ -1,4 +1,8 @@
 # Development
+setup-vm:
+	@echo "Setting up VM development environment..."
+	@./scripts/setup-vm-dev.sh
+
 dev-up:
 	docker compose -f compose.dev.yaml --env-file .env.dev up --build
 

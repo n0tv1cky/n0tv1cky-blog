@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { fetchBlog, getBaseUrl } from '../lib/api';
+import { useMetrics } from '../lib/useMetrics';
 import CommentSection from './CommentSection';
 import ReactionButtons from './ReactionButtons';
 import toast from 'react-hot-toast';
@@ -17,6 +18,7 @@ export default function BlogViewer({ slug }) {
     const [tocOpen, setTocOpen] = useState(true);
     const [collapsedHeadings, setCollapsedHeadings] = useState({});
     const articleRef = useRef(null);
+    const { trackInteraction } = useMetrics(slug);
 
     const generateId = (text) => {
         if (typeof text === 'string') {
@@ -101,6 +103,7 @@ export default function BlogViewer({ slug }) {
                         navigator.clipboard.writeText(code.textContent);
                         btn.textContent = 'Copied!';
                         toast.success('Code copied to clipboard!');
+                        trackInteraction('copy_code', 'code-block', { index });
                         setTimeout(() => btn.textContent = 'Copy', 2000);
                     };
                     pre.classList.add('relative');
@@ -108,7 +111,7 @@ export default function BlogViewer({ slug }) {
                 }
             });
         }
-    }, [blog]);
+    }, [blog, trackInteraction]);
 
     if (loading) {
         return (

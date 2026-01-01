@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import blogs, comments, reactions, uploads, admin, feeds
+from app.routes import blogs, comments, reactions, uploads, admin, feeds, metrics
 from fastapi.staticfiles import StaticFiles
 from app.blog_sync import sync_blogs_from_filesystem
 from app.database import engine, Base
@@ -61,6 +61,7 @@ app.include_router(reactions.router, prefix="/api", tags=["reactions"])
 app.include_router(uploads.router, prefix="/api", tags=["uploads"])
 app.include_router(admin.router, prefix="/api", tags=["admin"])
 app.include_router(feeds.router, prefix="/api", tags=["feeds"])
+app.include_router(metrics.router, tags=["metrics"])
 
 # Serve images directory
 app.mount("/images", StaticFiles(directory="./blogs/images"), name="images")

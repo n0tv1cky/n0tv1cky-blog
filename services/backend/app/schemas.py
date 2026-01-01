@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 import enum
 
@@ -58,3 +58,39 @@ class CommentOut(CommentBase):
     updated_at: Optional[datetime]
     class Config:
         orm_mode = True
+
+# Metrics Schemas
+class SessionCreate(BaseModel):
+    session_id: str = Field(..., max_length=64)
+    fingerprint: Optional[str] = Field(None, max_length=64)
+    user_agent: Optional[str] = None
+    referrer: Optional[str] = None
+
+class PageViewCreate(BaseModel):
+    session_id: str = Field(..., max_length=64)
+    blog_slug: str = Field(..., max_length=255)
+    referrer: Optional[str] = None
+
+class PageViewUpdate(BaseModel):
+    time_spent: Optional[int] = None
+    scroll_depth: Optional[int] = Field(None, ge=0, le=100)
+    is_bounce: Optional[bool] = None
+    exit_page: Optional[bool] = None
+
+class InteractionEventCreate(BaseModel):
+    session_id: str = Field(..., max_length=64)
+    blog_slug: str = Field(..., max_length=255)
+    event_type: str = Field(..., max_length=50)
+    event_target: Optional[str] = Field(None, max_length=255)
+    event_data: Optional[Dict[str, Any]] = None
+
+class MetricsResponse(BaseModel):
+    blog_slug: str
+    unique_users: int
+    total_views: int
+    avg_time_spent: float
+    avg_scroll_depth: float
+    bounce_rate: float
+    total_interactions: int
+    period_start: datetime
+    period_end: datetime

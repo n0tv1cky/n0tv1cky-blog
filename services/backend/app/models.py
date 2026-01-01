@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, DateTime, Integer, Text, Enum, ARRAY, ForeignKey
+from sqlalchemy import Column, String, Boolean, DateTime, Integer, Text, Enum, ARRAY, ForeignKey, Date, Float, JSON, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -45,3 +45,42 @@ class Comment(Base):
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
     blog = relationship("Blog", back_populates="comments")
+
+class UserSession(Base):
+    __tablename__ = "user_sessions"
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(64), unique=True, nullable=False, index=True)
+    fingerprint = Column(String(64), index=True)
+    first_seen = Column(DateTime(timezone=True), server_default=func.now())
+    last_seen = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    user_agent = Column(Text)
+    referrer = Column(Text)
+    
+    page_views = relationship("PageView", back_populates="session", cascade="all, delete-orphan")
+    interactions = relationship("InteractionEvent", back_populates="session", cascade="all, delete-orphan")
+
+class PageView(Base):
+    __tablename__ = "page_views"
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(64), ForeignKey("user_sessions.session_id", ondelete="CASCADE"), nullable=False, index=True)
+    blog_slug = Column(String(255), nullable=False, index=True)
+    viewed_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    time_spent = Column(Integer)
+    scroll_depth = Column(Integer, default=0)
+    is_bounce = Column(Boolean, default=True)
+    referrer = Column(Text)
+    exit_page = Column(Boolean, default=False)
+    
+    session = relationship("UserSession", back_populates="page_views")
+
+class InteractionEvent(Base):
+    __tablename__ = "interaction_events"
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(64), ForeignKey("user_sessions.session_id", ondelete="CASCADE"), nullable=False)
+    blog_slug = Column(String(255), nullable=False, index=True)
+    event_type = Column(String(50), nullable=False, index=True)
+    event_target = Column(String(255))
+    event_data = Column(JSON)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    
+    session = relationship("UserSession", back_populates="interactions")
