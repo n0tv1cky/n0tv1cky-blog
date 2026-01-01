@@ -201,6 +201,26 @@ export default function BlogViewer({ slug }) {
         blockquote: ({ node, ...props }) => (
             <blockquote className="text-gray-700 dark:text-gray-200 border-l-4 border-gray-300 dark:border-gray-600 pl-3 sm:pl-4 italic text-sm sm:text-base" {...props} />
         ),
+        table: ({ node, ...props }) => (
+            <div className="overflow-x-auto my-6">
+                <table className="min-w-full border-collapse border border-gray-300 dark:border-gray-600" {...props} />
+            </div>
+        ),
+        thead: ({ node, ...props }) => (
+            <thead className="bg-gray-100 dark:bg-gray-700" {...props} />
+        ),
+        tbody: ({ node, ...props }) => (
+            <tbody className="bg-white dark:bg-gray-800" {...props} />
+        ),
+        tr: ({ node, ...props }) => (
+            <tr className="border-b border-gray-300 dark:border-gray-600" {...props} />
+        ),
+        th: ({ node, ...props }) => (
+            <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100 text-sm sm:text-base first:whitespace-nowrap" {...props} />
+        ),
+        td: ({ node, ...props }) => (
+            <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-gray-800 dark:text-gray-100 text-sm sm:text-base first:whitespace-nowrap" {...props} />
+        ),
     };
 
     return (
