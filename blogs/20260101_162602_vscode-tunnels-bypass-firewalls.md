@@ -4,7 +4,7 @@ slug: vscode-tunnels-bypass-firewalls
 published: true
 published_at: '2026-01-01T16:26:02.756569+05:30'
 created_at: '2026-01-01T16:26:02.756569+05:30'
-updated_at: '2026-01-01T16:27:56.886591+05:30'
+updated_at: '2026-01-01T19:12:12.528801+05:30'
 description: Deep dive into how VSCode tunnels bypass UFW firewalls using stateful
   connections. Diving into why traditional firewalls can't block them and how to detect
   them.
@@ -12,6 +12,7 @@ tags: []
 category: null
 author: admin
 ---
+
 
 
 ## The Hypothesis
@@ -258,7 +259,7 @@ tail -f /var/log/vscode-tunnel.log
 
 ---
 
-## The Safe Deployment Pattern (For Production VPS)
+## Safe Deployment Patterns to follow (for prod)
 
 If you must allow VSCode tunnels on a production VPS, follow this model:
 
