@@ -220,6 +220,20 @@ export async function deleteBlog(slug, adminPassword) {
     }
 }
 
+export async function togglePublishBlog(slug, adminPassword) {
+    const BASE = getBaseUrl();
+    const url = BASE ? `${BASE}/api/admin/blogs/${slug}/publish/` : `/api/admin/blogs/${slug}/publish/`;
+    try {
+        const data = await authFetch(url, {
+            method: 'PATCH',
+            adminPassword
+        });
+        return data;
+    } catch (e) {
+        throw e;
+    }
+}
+
 export function logout() {
     if (typeof window !== 'undefined') {
         localStorage.removeItem('admin_token');
