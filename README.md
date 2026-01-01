@@ -3,6 +3,33 @@
 ## Project Overview
 A modern, minimal blog platform where admins can publish markdown blogs with images, and users can interact through likes/dislikes and comments. **Markdown files serve as the source of truth**, making the system git-friendly and easily portable.
 
+## Quick Start
+
+### Local Development
+```bash
+# Start with localhost
+docker compose -f compose.dev.yaml up --build
+
+# Access at:
+# - Frontend: http://localhost:3000
+# - Backend API: http://localhost:8000
+```
+
+### VM Development (Access from Other Devices)
+```bash
+# Automated setup
+./scripts/setup-vm-dev.sh
+
+# Start development
+docker compose -f compose.dev.yaml up --build
+
+# Access from any device on your network:
+# - Frontend: http://YOUR_VM_IP:3000
+# - Backend API: http://YOUR_VM_IP:8000
+```
+
+📖 **See**: [Quick Start Guide](docs/QUICK-START-VM.md) | [VM Setup Details](docs/vm-development-setup.md)
+
 ## Tech Stack
 - **Frontend**: Next.js (JavaScript)
 - **Backend**: Python FastAPI
@@ -174,18 +201,96 @@ sudo systemctl status docker
 
 ## Environment Variables
 
-### .env.dev
+### Single Source of Truth Configuration
+
+Both `.env.dev` and `.env.prod` use a single variable that propagates to all URLs automatically.
+
+### Development (.env.dev)
+
+**Quick Setup:**
+```bash
+# Change this ONE line in .env.dev:
+HOST=localhost          # For local development
+HOST=192.168.1.100      # For VM development
+
+# Or use the automated script:
+./scripts/setup-vm-dev.sh
 ```
-DOMAIN_NAME=localhost:3000
-DATABASE_URL=postgresql://bloguser:blogpass@postgres:5432/blogdb
+
+All URLs automatically update:
+- Frontend: `http://${HOST}:3000`
+- Backend: `http://${HOST}:8000`
+
+**Full Configuration Structure:**
+```bash
+# ============================================
+# SINGLE SOURCE OF TRUTH
+# ============================================
+HOST=localhost              # Change this to your VM IP
+PROTOCOL=http
+FRONTEND_PORT=3000
+BACKEND_PORT=8000
+
+# ============================================
+# AUTOMATICALLY DERIVED (Don't edit these)
+# ============================================
+FRONTEND_URL=${PROTOCOL}://${HOST}:${FRONTEND_PORT}
+NEXT_PUBLIC_BACKEND_URL=${PROTOCOL}://${HOST}:${BACKEND_PORT}
+NEXT_PUBLIC_FRONTEND_URL=${PROTOCOL}://${HOST}:${FRONTEND_PORT}
+DOMAIN_NAME=${HOST}:${FRONTEND_PORT}
+
+# Database
 POSTGRES_USER=bloguser
 POSTGRES_PASSWORD=blogpass
 POSTGRES_DB=blogdb
-BACKEND_URL=http://backend:8000
-FRONTEND_URL=http://localhost:3000
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+
+# Environment
 NODE_ENV=development
 ADMIN_PASSWORD=admin123
+CORS_ORIGINS=*
 ```
+
+### Production (.env.prod)
+
+**Quick Setup:**
+```bash
+# Change this ONE line in .env.prod:
+DOMAIN=n0tv1cky.com     # Change to your domain
+```
+
+All URLs and CORS automatically update:
+- Frontend: `https://${DOMAIN}`
+- CORS: `https://${DOMAIN},https://www.${DOMAIN}`
+
+**Full Configuration Structure:**
+```bash
+# ============================================
+# SINGLE SOURCE OF TRUTH
+# ============================================
+DOMAIN=n0tv1cky.com         # Change this to your domain
+PROTOCOL=https
+
+# ============================================
+# AUTOMATICALLY DERIVED (Don't edit these)
+# ============================================
+FRONTEND_URL=${PROTOCOL}://${DOMAIN}
+NEXT_PUBLIC_FRONTEND_URL=${PROTOCOL}://${DOMAIN}
+DOMAIN_NAME=${DOMAIN}
+CORS_ORIGINS=${PROTOCOL}://${DOMAIN},${PROTOCOL}://www.${DOMAIN}
+
+# Database
+POSTGRES_USER=produser
+POSTGRES_PASSWORD=your_secure_password
+POSTGRES_DB=blogdb
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+
+# Environment
+NODE_ENV=production
+ADMIN_PASSWORD=your_secure_password_here
+```
+
+📖 **See**: [Environment Configuration Guide](docs/ENVIRONMENT-CONFIG-GUIDE.md) for detailed information
 
 ### .env.prod
 ```
