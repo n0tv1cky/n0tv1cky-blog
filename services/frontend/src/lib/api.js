@@ -238,6 +238,8 @@ export function logout() {
     if (typeof window !== 'undefined') {
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_refresh');
+        // Redirect to login page
+        window.location.href = '/admin/login';
     }
 }
 

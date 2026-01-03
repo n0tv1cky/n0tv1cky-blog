@@ -42,6 +42,7 @@ export default function AdminDashboard() {
                     // Optionally, remove token to avoid future confusion:
                     if (typeof window !== 'undefined') {
                         localStorage.removeItem('admin_token');
+                        localStorage.removeItem('admin_refresh');
                     }
                 } else {
                     toast.error('Error loading blogs');
@@ -51,12 +52,21 @@ export default function AdminDashboard() {
         return () => { isMounted = false; };
     }, []);
 
+    // Auto-redirect to login when credentials become invalid
+    useEffect(() => {
+        if (invalidCreds) {
+            toast.error('Session expired. Redirecting to login...');
+            router.push('/admin/login');
+        }
+    }, [invalidCreds, router]);
+
     function handleLogout() {
         if (typeof window !== 'undefined') {
             localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_refresh');
             setHasToken(false);
             toast.success('Logged out successfully');
-            router.refresh();
+            router.push('/admin/login');
         }
     }
 
@@ -249,8 +259,8 @@ export default function AdminDashboard() {
                     <button
                         onClick={() => setActiveTab('blogs')}
                         className={`px-6 py-3 font-medium transition-colors relative ${activeTab === 'blogs'
-                                ? 'text-primary-600 dark:text-primary-400'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                            ? 'text-primary-600 dark:text-primary-400'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                             }`}
                     >
                         Blogs
@@ -261,8 +271,8 @@ export default function AdminDashboard() {
                     <button
                         onClick={() => setActiveTab('metrics')}
                         className={`px-6 py-3 font-medium transition-colors relative ${activeTab === 'metrics'
-                                ? 'text-primary-600 dark:text-primary-400'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                            ? 'text-primary-600 dark:text-primary-400'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                             }`}
                     >
                         Metrics
@@ -403,8 +413,8 @@ export default function AdminDashboard() {
                                                         handleTogglePublish(b.slug);
                                                     }}
                                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${b.published
-                                                            ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/50'
-                                                            : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50'
+                                                        ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/50'
+                                                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50'
                                                         }`}
                                                 >
                                                     {b.published ? 'Unpublish' : 'Publish'}
