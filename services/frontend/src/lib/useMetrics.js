@@ -64,6 +64,9 @@ export const useMetrics = (blogSlug) => {
   const heartbeatIntervalRef = useRef(null);
   const lastScrollTimeRef = useRef(0);
   const hasSentInitialView = useRef(false);
+  const isPageVisibleRef = useRef(true);
+  const hiddenTimeRef = useRef(0); // Track time when page was hidden
+  const totalHiddenTimeRef = useRef(0); // Track accumulated hidden time
   
   // Initialize session
   useEffect(() => {
@@ -103,6 +106,32 @@ export const useMetrics = (blogSlug) => {
     trackPageView();
   }, [sessionId, blogSlug]);
   
+  // Track page visibility to pause metrics when tab is hidden
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Page is now hidden - record when it was hidden
+        isPageVisibleRef.current = false;
+        hiddenTimeRef.current = Date.now();
+        console.log('📊 Metrics: Tab hidden - pausing tracking');
+      } else {
+        // Page is now visible - add hidden duration to total
+        isPageVisibleRef.current = true;
+        if (hiddenTimeRef.current > 0) {
+          const hiddenDuration = Date.now() - hiddenTimeRef.current;
+          totalHiddenTimeRef.current += hiddenDuration;
+          console.log(`📊 Metrics: Tab visible - was hidden for ${Math.floor(hiddenDuration / 1000)}s`);
+          hiddenTimeRef.current = 0;
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+  
   // Track scroll depth
   useEffect(() => {
     if (!pageViewId) return;
@@ -128,17 +157,27 @@ export const useMetrics = (blogSlug) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [pageViewId]);
   
-  // Heartbeat to update time spent
+  // Heartbeat to update time spent (only when page is visible)
   useEffect(() => {
     if (!pageViewId) return;
     
     heartbeatIntervalRef.current = setInterval(() => {
-      const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      // Only track time if page is visible
+      if (!isPageVisibleRef.current) {
+        console.log('📊 Metrics: Heartbeat skipped (tab hidden)');
+        return;
+      }
+      
+      // Calculate actual visible time (total time - hidden time)
+      const totalElapsed = Date.now() - startTimeRef.current;
+      const visibleTime = Math.floor((totalElapsed - totalHiddenTimeRef.current) / 1000);
+      
+      console.log(`📊 Metrics: Heartbeat sent - ${visibleTime}s visible (${Math.floor(totalHiddenTimeRef.current / 1000)}s hidden)`);
       
       trackingFetch(
         `/api/metrics/pageview/${pageViewId}`,
         {
-          time_spent: timeSpent,
+          time_spent: visibleTime,
           scroll_depth: maxScrollDepthRef.current,
           is_bounce: false
         },
@@ -158,9 +197,13 @@ export const useMetrics = (blogSlug) => {
     return () => {
       if (!pageViewId) return;
       
-      const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      // Calculate final visible time
+      const totalElapsed = Date.now() - startTimeRef.current;
+      const currentHiddenTime = isPageVisibleRef.current ? 0 : (Date.now() - hiddenTimeRef.current);
+      const visibleTime = Math.floor((totalElapsed - totalHiddenTimeRef.current - currentHiddenTime) / 1000);
+      
       const data = JSON.stringify({
-        time_spent: timeSpent,
+        time_spent: visibleTime,
         scroll_depth: maxScrollDepthRef.current,
         exit_page: true
       });
